@@ -1,0 +1,16 @@
+^\.github$
+^\.gitignore$
+^\.lintr$
+^\.playwright-cli$
+^_pkgdown\.yml$
+^README\.Rmd$
+^CODE_OF_CONDUCT\.md$
+^CONTRIBUTING\.md$
+^LICENSE\.md$
+^data-raw$
+^pkgdown$
+^tests/browser$
+^output$
+^test-results$
+^docs$
+^leaflet-indoor\.Rproj$

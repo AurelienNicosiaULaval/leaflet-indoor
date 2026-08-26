@@ -1,0 +1,15 @@
+.DS_Store
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+.playwright-cli/
+docs/
+output/
+test-results/
+tests/browser/node_modules/
+tests/browser/test-results/
+tests/browser/playwright-report/
+tests/browser/output/
+*.tar.gz
+*.Rcheck/

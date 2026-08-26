@@ -1,0 +1,41 @@
+Package: leaflet.indoor
+Title: Multi-Level Indoor Maps with 'Leaflet'
+Version: 0.1.0
+Authors@R:
+    person("Aurélien", "Nicosia", , "116816597+AurelienNicosiaULaval@users.noreply.github.com", role = c("aut", "cre"))
+Description: Adds accessible floor controls and multi-level indoor vector
+    layers to maps created with the 'leaflet' package. Simple features,
+    GeoJSON, simple feature geometry collections, and optional 'SpatVector'
+    objects can be displayed with one active floor per indoor data set.
+License: MIT + file LICENSE
+URL: https://aureliennicosiaulaval.github.io/leaflet-indoor/,
+    https://github.com/AurelienNicosiaULaval/leaflet-indoor
+BugReports: https://github.com/AurelienNicosiaULaval/leaflet-indoor/issues
+Depends:
+    R (>= 4.1.0)
+Imports:
+    htmltools (>= 0.5.7),
+    jsonlite (>= 1.8.8),
+    leaflet (>= 2.2.0),
+    sf (>= 1.0-0)
+Suggests:
+    covr,
+    devtools,
+    knitr,
+    lintr,
+    pkgdown,
+    quarto,
+    rmarkdown,
+    shiny,
+    spelling,
+    terra,
+    testthat (>= 3.0.0),
+    urlchecker,
+    withr
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Encoding: UTF-8
+Language: en-US
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.1.0
+LazyData: true

@@ -1,0 +1,10 @@
+linters: linters_with_defaults(
+  line_length_linter = line_length_linter(120L),
+  object_name_linter = NULL
+  )
+exclusions: list(
+    "inst/examples/shiny/app.R" = list(object_usage_linter = Inf),
+    "tests/browser/generate-fixtures.R" = list(object_usage_linter = Inf),
+    "tests/testthat/helper-fixtures.R" = list(object_usage_linter = Inf),
+    "vignettes/shiny.Rmd" = list(object_usage_linter = Inf)
+  )
