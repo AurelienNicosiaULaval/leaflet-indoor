@@ -1,0 +1,9 @@
+.leaflet.html-widget {
+  min-height: 420px;
+  max-width: 100%;
+}
+@media (max-width: 576px) {
+  .leaflet.html-widget {
+    min-height: 360px;
+  }
+}

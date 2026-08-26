@@ -1,0 +1,79 @@
+---
+title: "Shiny integration"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Shiny integration}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(leaflet)
+library(leaflet.indoor)
+library(shiny)
+```
+
+`leaflet.indoor` registers its dependencies on both ordinary widgets and
+`leafletProxy()` calls. The application below exposes user floor changes and
+updates the map from the server.
+
+```{r shiny-app}
+ui <- fluidPage(
+  actionButton("floor_two", "Show floor 2"),
+  verbatimTextOutput("selected_floor"),
+  leafletOutput("map", height = 500)
+)
+
+server <- function(input, output, session) {
+  output$map <- renderLeaflet({
+    leaflet(
+      indoor_demo,
+      options = leafletOptions(crs = leafletCRS("L.CRS.Simple"))
+    ) |>
+      addIndoor(
+        label = ~name,
+        popup = ~description,
+        layerId = ~feature_id,
+        style = list(fillColor = ~fill),
+        crs = "simple"
+      ) |>
+      addIndoorControl(position = "bottomright")
+  })
+
+  observeEvent(input$floor_two, {
+    leafletProxy("map", session) |>
+      setIndoorLevel("2")
+  })
+
+  output$selected_floor <- renderPrint(input$map_indoor_level)
+}
+
+app <- shinyApp(ui, server)
+invisible(app)
+```
+
+Run the installed example with:
+
+```r
+shiny::runApp(system.file("examples/shiny", package = "leaflet.indoor"))
+```
+
+## Input values
+
+User selection produces `input$MAPID_indoor_level` with:
+
+* `level`: the selected floor as text;
+* `dataset_id`: the indoor data set;
+* `control_id`: the control used.
+
+Feature clicks produce `input$MAPID_indoor_feature_click` with `id`,
+`dataset_id`, `level`, `lat`, and `lng`. Programmatic floor changes do not emit
+the user-selection event, which prevents reactive feedback loops.
+
+## Replacing and clearing data
+
+`addIndoor()` can be called on a proxy with explicit `data`. Reusing a
+`dataset_id` replaces its layer groups and refreshes linked controls.
+`clearIndoor()` removes its features but retains the controls in their empty
+state. `removeIndoorControl()` removes only the named control.

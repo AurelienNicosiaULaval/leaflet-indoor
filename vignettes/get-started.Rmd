@@ -1,0 +1,156 @@
+---
+title: "Get started with leaflet.indoor"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get started with leaflet.indoor}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(leaflet)
+library(leaflet.indoor)
+```
+
+`leaflet.indoor` adds indoor vector layers to a `leaflet` map and keeps one
+floor visible per indoor data set. It works with saved HTML widgets, R Markdown,
+Quarto, and Shiny without a tile service.
+
+## Data structure
+
+The primary input is an `sf` object. A column named `level` is used by default.
+Numeric, character, and factor floors are supported. A list-column assigns one
+feature to more than one floor:
+
+```{r levels}
+indoor_demo[c("name", "level")]
+```
+
+The included data are synthetic. Rooms use polygons, the corridor and emergency
+route use line geometries, the elevator uses a point, and the sensor feature is
+a multipoint. The stairwell and elevator belong to floors 0, 1, and 2.
+
+Missing or empty floors are errors by default. Use
+`missing_level = "drop"` only when dropping incomplete features is intentional.
+
+## A local Cartesian map
+
+Local plans must use `L.CRS.Simple`, have no declared `sf` CRS, and explicitly
+set `crs = "simple"`. Coordinates are passed through unchanged.
+
+```{r local-map, out.width='100%'}
+leaflet(
+  indoor_demo,
+  options = leafletOptions(
+    crs = leafletCRS(crsClass = "L.CRS.Simple"),
+    minZoom = -2
+  )
+) |>
+  addIndoor(
+    level = "level",
+    initial_level = "0",
+    layerId = ~feature_id,
+    label = ~name,
+    popup = ~description,
+    style = list(fillColor = ~fill),
+    crs = "simple"
+  ) |>
+  addIndoorControl(position = "bottomright")
+```
+
+## Floor order
+
+Pure numeric levels are ordered numerically. Character levels use a stable
+natural order, including basements such as `B2` and `B1`. Factor levels retain
+their observed factor order. For domain-specific labels, provide every observed
+floor exactly once:
+
+```r
+addIndoor(
+  level_order = c("Basement", "Ground", "Mezzanine", "Upper"),
+  initial_level = "Ground"
+)
+```
+
+The canonical order runs from lowest to highest. The vertical control displays
+the reverse order by default so higher floors appear above lower floors. Set
+`indoorControlOptions(descending = FALSE)` to display canonical order.
+
+## Styles, labels, and popups
+
+`indoorOptions()` defines separate defaults for points, lines, and polygons.
+The `style` list can contain constants, vectors, or formulas. Its values override
+the geometry defaults feature by feature.
+
+Plain labels and popups are escaped. Mark up trusted content explicitly:
+
+```r
+addIndoor(
+  label = ~name,
+  popup = htmltools::HTML("<strong>Trusted content</strong>"),
+  style = list(fillColor = ~fill, weight = 2)
+)
+```
+
+## Multiple indoor data sets
+
+Data sets are independent when they use different `dataset_id` values. Controls
+are independent when they use different `control_id` values. Identifiers are
+scoped to one map, so separate widgets never share an active floor.
+
+```r
+map |>
+  addIndoor(data = rooms, dataset_id = "rooms") |>
+  addIndoorControl(dataset_id = "rooms", control_id = "rooms-control") |>
+  addIndoor(data = services, dataset_id = "services") |>
+  addIndoorControl(dataset_id = "services", control_id = "services-control")
+```
+
+## Geographic data
+
+`sf` objects with a declared geographic or projected CRS are transformed to
+EPSG:4326 for an ordinary Leaflet map. This example intentionally omits online
+tiles so it builds without network access.
+
+```{r geographic-map, out.width='100%'}
+leaflet(indoor_demo_geo) |>
+  addIndoor(
+    layerId = ~feature_id,
+    label = ~name,
+    popup = ~description,
+    style = list(fillColor = ~fill)
+  ) |>
+  addIndoorControl()
+```
+
+## Shiny and proxies
+
+Use `setIndoorLevel()` with a proxy after a map has rendered:
+
+```r
+leafletProxy("map") |>
+  setIndoorLevel("2")
+```
+
+User changes arrive in `input$map_indoor_level` as a list containing `level`,
+`dataset_id`, and `control_id`. See `vignette("shiny", package =
+"leaflet.indoor")` for a complete application.
+
+## Troubleshooting
+
+* A missing `level` column is an error and names the missing column.
+* A local plan on a geographic map is rejected instead of being silently
+  interpreted as longitude and latitude.
+* A spatial CRS on an `L.CRS.Simple` map is rejected because no defensible
+  spatial transformation exists.
+* An unknown floor passed to a regular map is an R error. On a Shiny proxy it is
+  rejected in the browser and leaves the current floor unchanged.
+
+## Known limitations and roadmap
+
+Version 0.1.0 supports two-dimensional GeoJSON-compatible vector geometry. It
+does not provide rasters, three-dimensional floors, indoor routing, feature
+editing, or automatic alignment of unrelated floor plans. Future work will be
+driven by reproducible use cases and compatibility with the Leaflet JavaScript
+version embedded by the R `leaflet` package.

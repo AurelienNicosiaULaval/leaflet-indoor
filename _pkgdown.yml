@@ -1,0 +1,59 @@
+url: https://aureliennicosiaulaval.github.io/leaflet-indoor/
+template:
+  bootstrap: 5
+  light-switch: true
+  bslib:
+    primary: "#0b5cab"
+    link-color: "#0b5cab"
+home:
+  title: Multi-Level Indoor Maps with Leaflet
+  description: Accessible multi-floor indoor vector layers for R Leaflet maps.
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github, lightswitch]
+  components:
+    intro:
+      text: Get started
+      href: articles/get-started.html
+    articles:
+      text: Articles
+      menu:
+      - text: Data formats
+        href: articles/data-formats.html
+      - text: Coordinate systems
+        href: articles/coordinate-systems.html
+      - text: Shiny integration
+        href: articles/shiny.html
+    github:
+      icon: fab fa-github
+      href: https://github.com/AurelienNicosiaULaval/leaflet-indoor
+      aria-label: GitHub repository
+reference:
+- title: Indoor data layers
+  contents:
+  - addIndoor
+  - clearIndoor
+- title: Floor controls
+  contents:
+  - addIndoorControl
+  - setIndoorLevel
+  - removeIndoorControl
+- title: Options
+  contents:
+  - indoorOptions
+  - indoorControlOptions
+- title: Example data
+  contents:
+  - indoor_demo
+  - indoor_demo_geo
+articles:
+- title: Fundamentals
+  navbar: ~
+  contents:
+  - get-started
+  - data-formats
+  - coordinate-systems
+- title: Applications
+  contents:
+  - shiny

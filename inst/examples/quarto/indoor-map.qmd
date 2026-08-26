@@ -1,0 +1,24 @@
+---
+title: "leaflet.indoor Quarto example"
+format: html
+embed-resources: true
+execute:
+  echo: true
+---
+
+```{r}
+library(leaflet)
+library(leaflet.indoor)
+
+leaflet(
+  indoor_demo,
+  options = leafletOptions(crs = leafletCRS("L.CRS.Simple"))
+) |>
+  addIndoor(
+    label = ~name,
+    popup = ~description,
+    style = list(fillColor = ~fill),
+    crs = "simple"
+  ) |>
+  addIndoorControl(position = "bottomright")
+```

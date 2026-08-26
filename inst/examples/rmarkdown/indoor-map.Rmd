@@ -1,0 +1,23 @@
+---
+title: "leaflet.indoor R Markdown example"
+output:
+  html_document:
+    self_contained: true
+---
+
+```{r}
+library(leaflet)
+library(leaflet.indoor)
+
+leaflet(
+  indoor_demo,
+  options = leafletOptions(crs = leafletCRS("L.CRS.Simple"))
+) |>
+  addIndoor(
+    label = ~name,
+    popup = ~description,
+    style = list(fillColor = ~fill),
+    crs = "simple"
+  ) |>
+  addIndoorControl(position = "bottomright")
+```

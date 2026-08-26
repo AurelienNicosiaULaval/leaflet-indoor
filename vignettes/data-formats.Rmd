@@ -1,0 +1,86 @@
+---
+title: "Indoor data formats"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Indoor data formats}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(leaflet)
+library(leaflet.indoor)
+library(sf)
+```
+
+## Simple features
+
+An `sf` object is the preferred input. The geometry may contain points,
+multipoints, lines, multilines, polygons, multipolygons, and compatible geometry
+collections. Each non-empty feature needs at least one floor.
+
+```{r sf-summary}
+table(sf::st_geometry_type(indoor_demo, by_geometry = TRUE))
+```
+
+The floor column may be numeric, character, or factor. Use a list-column for a
+feature shared across floors:
+
+```r
+rooms$level <- list(c("0", "1"), "1", c("1", "2"))
+```
+
+A bare `sfc` has no attributes, so pass one floor value per geometry:
+
+```{r sfc-example, eval=TRUE}
+geometry <- st_geometry(indoor_demo[1:2, ])
+leaflet(options = leafletOptions(crs = leafletCRS("L.CRS.Simple"))) |>
+  addIndoor(data = geometry, level = c("0", "1"), crs = "simple")
+```
+
+## GeoJSON
+
+`addIndoor()` accepts a local `.geojson` file, a JSON string, an R list
+representing a `Feature` or `FeatureCollection`, or a list of features. Remote
+URLs are intentionally not downloaded.
+
+GeoJSON properties are available to `label`, `popup`, `layerId`, and `style`
+formulas. Under an ordinary map, GeoJSON coordinates are interpreted as
+longitude and latitude. Use `crs = "simple"` for a local coordinate structure.
+
+```{r geojson-example, eval=TRUE}
+geojson_file <- tempfile(fileext = ".geojson")
+geojson_demo <- indoor_demo_geo[c(1:3, 6:10), ]
+geojson_demo$level <- vapply(geojson_demo$level, `[[`, character(1), 1)
+sf::st_write(geojson_demo, geojson_file, quiet = TRUE)
+
+leaflet() |>
+  addIndoor(
+    data = geojson_file,
+    label = ~name,
+    popup = ~description,
+    layerId = ~feature_id
+  ) |>
+  addIndoorControl()
+```
+
+## SpatVector
+
+When the suggested `terra` package is installed, `SpatVector` input is converted
+with `sf::st_as_sf()`. Attributes and the declared CRS are then handled exactly
+like ordinary `sf` input.
+
+```{r terra-example, eval=FALSE}
+rooms_terra <- terra::vect(indoor_demo_geo)
+leaflet() |>
+  addIndoor(rooms_terra, label = ~name) |>
+  addIndoorControl()
+```
+
+## Empty and invalid data
+
+A zero-row feature collection is valid and creates an empty indoor data set.
+Its control displays `No levels`. Individual empty geometries, unsupported curve
+types, non-finite coordinates, duplicate `layerId` values, and malformed
+GeoJSON are rejected with feature-specific errors.
