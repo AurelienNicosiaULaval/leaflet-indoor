@@ -1,0 +1,54 @@
+name: Browser tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    env:
+      R_KEEP_PKG_SOURCE: yes
+    steps:
+      - uses: actions/checkout@v7
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-quarto@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::devtools
+          needs: check
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/browser/package-lock.json
+      - name: Install package
+        run: R CMD INSTALL .
+      - name: Generate browser fixtures
+        run: Rscript tests/browser/generate-fixtures.R
+      - name: Install browser test dependencies
+        working-directory: tests/browser
+        run: npm ci
+      - name: Install Chromium
+        working-directory: tests/browser
+        run: npx playwright install --with-deps chromium
+      - name: Run browser tests
+        working-directory: tests/browser
+        run: npm test
+      - name: Upload browser artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-test-artifacts
+          path: |
+            output/playwright/
+            tests/browser/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14
