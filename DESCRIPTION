@@ -1,12 +1,14 @@
 Package: leaflet.indoor
 Title: Multi-Level Indoor Maps with 'Leaflet'
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R:
     person("Aurélien", "Nicosia", , "116816597+AurelienNicosiaULaval@users.noreply.github.com", role = c("aut", "cre"))
 Description: Adds accessible floor controls and multi-level indoor vector
     layers to maps created with the 'leaflet' package. Simple features,
     GeoJSON, simple feature geometry collections, and optional 'SpatVector'
-    objects can be displayed with one active floor per indoor data set.
+    objects can be displayed with one active floor per indoor data set. Room
+    identifiers can also be associated with portable photo carousels whose
+    images remain paired with plain-text captions.
 License: MIT + file LICENSE
 URL: https://aureliennicosiaulaval.github.io/leaflet-indoor/,
     https://github.com/AurelienNicosiaULaval/leaflet-indoor
@@ -31,7 +33,8 @@ Suggests:
     terra,
     testthat (>= 3.0.0),
     urlchecker,
-    withr
+    withr,
+    xml2
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Encoding: UTF-8

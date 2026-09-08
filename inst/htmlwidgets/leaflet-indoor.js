@@ -70,6 +70,164 @@
     });
   }
 
+  function replaceCounterTokens(template, current, total) {
+    return String(template)
+      .replace(/\{current\}/g, String(current))
+      .replace(/\{total\}/g, String(total));
+  }
+
+  function updatePopupLayout(layer) {
+    var popup = layer.getPopup ? layer.getPopup() : null;
+    if (popup && typeof popup.update === "function") popup.update();
+  }
+
+  function closePhotoDialog(dataset) {
+    if (dataset && typeof dataset.closePhotoDialog === "function") {
+      dataset.closePhotoDialog();
+    }
+  }
+
+  function openPhotoDialog(dataset, photo, trigger) {
+    closePhotoDialog(dataset);
+    var options = dataset.photoOptions || {};
+    var overlay = L.DomUtil.create("div", "leaflet-indoor-photo-dialog");
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", options.dialogLabel || "Enlarged room photo");
+
+    var panel = L.DomUtil.create("div", "leaflet-indoor-photo-dialog__panel", overlay);
+    var closeButton = L.DomUtil.create("button", "leaflet-indoor-photo-dialog__close", panel);
+    closeButton.type = "button";
+    closeButton.textContent = options.closeLabel || "Close";
+
+    var figure = L.DomUtil.create("figure", "leaflet-indoor-photo-dialog__figure", panel);
+    var image = L.DomUtil.create("img", "leaflet-indoor-photo-dialog__image", figure);
+    image.alt = photo.alt || "";
+    var caption = L.DomUtil.create("figcaption", "leaflet-indoor-photo-dialog__caption", figure);
+    caption.textContent = photo.caption;
+    var unavailable = L.DomUtil.create("div", "leaflet-indoor-photo-dialog__unavailable", figure);
+    unavailable.setAttribute("role", "status");
+    unavailable.textContent = options.unavailableLabel || "Image unavailable";
+    unavailable.hidden = true;
+
+    var closed = false;
+    function close() {
+      if (closed) return;
+      closed = true;
+      document.removeEventListener("keydown", onKeydown);
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      if (dataset.closePhotoDialog === close) dataset.closePhotoDialog = null;
+      if (trigger && typeof trigger.focus === "function") trigger.focus();
+    }
+    function onKeydown(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+      } else if (event.key === "Tab") {
+        event.preventDefault();
+        closeButton.focus();
+      }
+    }
+    closeButton.addEventListener("click", close);
+    overlay.addEventListener("click", function(event) {
+      if (event.target === overlay) close();
+    });
+    document.addEventListener("keydown", onKeydown);
+    dataset.closePhotoDialog = close;
+    document.body.appendChild(overlay);
+    image.addEventListener("error", function() {
+      image.hidden = true;
+      unavailable.hidden = false;
+    });
+    image.src = photo.src;
+    closeButton.focus();
+  }
+
+  function createPhotoCarousel(map, dataset, layer, properties) {
+    var photos = properties.leafletIndoorPhotos;
+    var options = dataset.photoOptions || {};
+    var root = L.DomUtil.create("div", "leaflet-indoor-photo-popup");
+    root.setAttribute("role", "group");
+    root.setAttribute("aria-label", options.carouselLabel || "Room photos");
+    root.setAttribute("data-indoor-photo-count", String(photos.length));
+    L.DomEvent.disableClickPropagation(root);
+    L.DomEvent.disableScrollPropagation(root);
+
+    if (properties.leafletIndoorPopup !== null &&
+        properties.leafletIndoorPopup !== undefined) {
+      var introduction = L.DomUtil.create("div", "leaflet-indoor-photo-popup__introduction", root);
+      introduction.innerHTML = properties.leafletIndoorPopup;
+    }
+
+    var figure = L.DomUtil.create("figure", "leaflet-indoor-photo-popup__figure", root);
+    var image = L.DomUtil.create("img", "leaflet-indoor-photo-popup__image", figure);
+    var caption = L.DomUtil.create("figcaption", "leaflet-indoor-photo-popup__caption", figure);
+    var unavailable = L.DomUtil.create("div", "leaflet-indoor-photo-popup__unavailable", figure);
+    unavailable.setAttribute("role", "status");
+    unavailable.textContent = options.unavailableLabel || "Image unavailable";
+    unavailable.hidden = true;
+
+    var counter = L.DomUtil.create("div", "leaflet-indoor-photo-popup__counter", root);
+    counter.setAttribute("aria-live", "polite");
+    var actions = L.DomUtil.create("div", "leaflet-indoor-photo-popup__actions", root);
+    var previous = L.DomUtil.create("button", "leaflet-indoor-photo-popup__button", actions);
+    previous.type = "button";
+    previous.textContent = options.previousLabel || "Previous";
+    var next = L.DomUtil.create("button", "leaflet-indoor-photo-popup__button", actions);
+    next.type = "button";
+    next.textContent = options.nextLabel || "Next";
+    var enlarge = L.DomUtil.create(
+      "button",
+      "leaflet-indoor-photo-popup__button leaflet-indoor-photo-popup__button--enlarge",
+      actions
+    );
+    enlarge.type = "button";
+    enlarge.textContent = options.enlargeLabel || "Enlarge";
+
+    var index = 0;
+    function render() {
+      var photo = photos[index];
+      image.hidden = false;
+      unavailable.hidden = true;
+      image.alt = photo.alt || "";
+      image.src = photo.src;
+      caption.textContent = photo.caption;
+      counter.textContent = replaceCounterTokens(
+        options.counterLabel || "Photo {current} of {total}",
+        index + 1,
+        photos.length
+      );
+      root.setAttribute("data-indoor-photo-index", String(index));
+      previous.disabled = photos.length < 2;
+      next.disabled = photos.length < 2;
+      updatePopupLayout(layer);
+    }
+    image.addEventListener("load", function() {
+      updatePopupLayout(layer);
+    });
+    image.addEventListener("error", function() {
+      image.hidden = true;
+      unavailable.hidden = false;
+      updatePopupLayout(layer);
+    });
+    previous.addEventListener("click", function(event) {
+      event.preventDefault();
+      index = (index - 1 + photos.length) % photos.length;
+      render();
+    });
+    next.addEventListener("click", function(event) {
+      event.preventDefault();
+      index = (index + 1) % photos.length;
+      render();
+    });
+    enlarge.addEventListener("click", function(event) {
+      event.preventDefault();
+      openPhotoDialog(dataset, photos[index], enlarge);
+    });
+    render();
+    return root;
+  }
+
   function layerForFeature(map, dataset, level, feature) {
     var props = feature.properties || {};
     return L.geoJSON(feature, {
@@ -83,7 +241,21 @@
         if (props.leafletIndoorLabel !== null && props.leafletIndoorLabel !== undefined) {
           layer.bindTooltip(props.leafletIndoorLabel, dataset.labelOptions || {});
         }
-        if (props.leafletIndoorPopup !== null && props.leafletIndoorPopup !== undefined) {
+        var hasPhotos = Array.isArray(props.leafletIndoorPhotos) &&
+          props.leafletIndoorPhotos.length > 0;
+        if (hasPhotos) {
+          layer.bindPopup(
+            createPhotoCarousel(map, dataset, layer, props),
+            dataset.popupOptions || {}
+          );
+          layer.on("popupopen", function() {
+            L.DomUtil.addClass(map.getContainer(), "leaflet-indoor-photo-popup-open");
+          });
+          layer.on("popupclose", function() {
+            L.DomUtil.removeClass(map.getContainer(), "leaflet-indoor-photo-popup-open");
+            closePhotoDialog(dataset);
+          });
+        } else if (props.leafletIndoorPopup !== null && props.leafletIndoorPopup !== undefined) {
           layer.bindPopup(props.leafletIndoorPopup, dataset.popupOptions || {});
         }
         layer.on("click", function(event) {
@@ -95,6 +267,7 @@
 
   function removeActiveLayer(map, dataset) {
     if (!dataset || dataset.active === null || dataset.active === undefined) return;
+    closePhotoDialog(dataset);
     var group = dataset.groups[dataset.active];
     if (group && map.hasLayer(group)) map.removeLayer(group);
   }
@@ -120,6 +293,8 @@
       options: payload.options || {},
       labelOptions: payload.labelOptions || {},
       popupOptions: payload.popupOptions || {},
+      photoOptions: payload.photoOptions || {},
+      closePhotoDialog: null,
       crs: payload.crs
     };
     dataset.levels.forEach(function(level) {
@@ -297,7 +472,9 @@
       groups: Object.create(null),
       options: dataset ? dataset.options : {},
       labelOptions: dataset ? dataset.labelOptions : {},
-      popupOptions: dataset ? dataset.popupOptions : {}
+      popupOptions: dataset ? dataset.popupOptions : {},
+      photoOptions: dataset ? dataset.photoOptions : {},
+      closePhotoDialog: null
     };
     updateLinkedControls(map, datasetId);
   }

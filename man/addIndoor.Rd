@@ -19,7 +19,9 @@ addIndoor(
   labelOptions = leaflet::labelOptions(),
   popupOptions = leaflet::popupOptions(),
   missing_level = c("error", "drop"),
-  crs = c("auto", "geographic", "simple")
+  crs = c("auto", "geographic", "simple"),
+  photos = NULL,
+  photoOptions = indoorPhotoOptions()
 )
 }
 \arguments{
@@ -58,6 +60,12 @@ path options.}
 \item{crs}{Coordinate interpretation. \code{"auto"} detects the map CRS for
 ordinary maps. Use \code{"simple"} explicitly for local coordinates sent to a
 proxy.}
+
+\item{photos}{Optional photo catalogue created by \code{\link[=indoorPhotoCatalog]{indoorPhotoCatalog()}}, or
+a data frame with equivalent \code{layerId}, \code{src}, \code{caption}, and optional
+\code{alt} columns. Catalogue identifiers must match \code{layerId} values.}
+
+\item{photoOptions}{Carousel labels created by \code{\link[=indoorPhotoOptions]{indoorPhotoOptions()}}.}
 }
 \value{
 The input map or proxy, with an indoor method queued.

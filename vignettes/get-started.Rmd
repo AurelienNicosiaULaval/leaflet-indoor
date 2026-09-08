@@ -93,6 +93,9 @@ addIndoor(
 )
 ```
 
+For paired room images and captions, see the
+`vignette("photo-carousels", package = "leaflet.indoor")` article.
+
 ## Multiple indoor data sets
 
 Data sets are independent when they use different `dataset_id` values. Controls

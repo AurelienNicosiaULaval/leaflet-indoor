@@ -26,9 +26,13 @@ assert_map <- function(map) {
 }
 
 indoor_dependency <- function() {
+  version <- tryCatch(
+    as.character(utils::packageVersion("leaflet.indoor")),
+    error = function(e) "0.1.0.9000"
+  )
   htmltools::htmlDependency(
     name = "leaflet-indoor",
-    version = "0.1.0",
+    version = version,
     src = c(file = system.file("htmlwidgets", package = "leaflet.indoor")),
     script = "leaflet-indoor.js",
     stylesheet = "leaflet-indoor.css",

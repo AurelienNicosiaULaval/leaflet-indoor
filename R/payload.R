@@ -65,13 +65,15 @@ resolve_styles <- function(style, data, n) {
   })
 }
 
-build_indoor_payload <- function(normalized, dataset_id, layerId, label, popup,
-                                 style, options, labelOptions, popupOptions) {
+build_indoor_payload <- function(normalized, dataset_id, layerId, photos, label, popup,
+                                 style, options, labelOptions, popupOptions,
+                                 photoOptions) {
   n <- length(normalized$features)
   ids <- resolve_layer_ids(layerId, normalized$eval_data, n)
   labels <- resolve_content(label, normalized$eval_data, n, "label")
   popups <- resolve_content(popup, normalized$eval_data, n, "popup")
   styles <- resolve_styles(style, normalized$eval_data, n)
+  galleries <- resolve_photo_galleries(photos, ids)
 
   features <- lapply(seq_len(n), function(i) {
     feature <- normalized$features[[i]]
@@ -81,6 +83,7 @@ build_indoor_payload <- function(normalized, dataset_id, layerId, label, popup,
       leafletIndoorLayerId = ids[[i]],
       leafletIndoorLabel = labels[[i]],
       leafletIndoorPopup = popups[[i]],
+      leafletIndoorPhotos = galleries[[i]],
       leafletIndoorStyle = styles[[i]]
     )
     feature
@@ -94,6 +97,7 @@ build_indoor_payload <- function(normalized, dataset_id, layerId, label, popup,
     options = unclass(options),
     labelOptions = unclass(labelOptions),
     popupOptions = unclass(popupOptions),
+    photoOptions = unclass(photoOptions),
     crs = normalized$crs
   )
 }

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-labelledby="title description">
+  <title id="title">Synthetic laboratory workbench view</title>
+  <desc id="description">An illustrated teaching laboratory with a workbench, stools, cabinets, and equipment.</desc>
+  <rect width="800" height="500" fill="#eaf0f1"/>
+  <rect y="355" width="800" height="145" fill="#b8c2c7"/>
+  <rect x="55" y="55" width="690" height="75" rx="4" fill="#d8e8eb" stroke="#48646c" stroke-width="7"/>
+  <g fill="#ffffff" stroke="#668087" stroke-width="5">
+    <rect x="65" y="145" width="125" height="105"/>
+    <rect x="200" y="145" width="125" height="105"/>
+    <rect x="335" y="145" width="125" height="105"/>
+  </g>
+  <rect x="70" y="285" width="660" height="70" fill="#5b7c83" stroke="#334e55" stroke-width="8"/>
+  <rect x="95" y="355" width="95" height="110" fill="#8aa2a8"/>
+  <rect x="610" y="355" width="95" height="110" fill="#8aa2a8"/>
+  <g fill="#f28e2b" stroke="#8b4c08" stroke-width="5">
+    <path d="M235 275v-75h55v75z"/>
+    <path d="M510 275v-95h70v95z"/>
+  </g>
+  <g fill="#0b5cab">
+    <circle cx="290" cy="420" r="38"/>
+    <circle cx="510" cy="420" r="38"/>
+  </g>
+  <g stroke="#344f57" stroke-width="10">
+    <path d="M290 450v45M510 450v45"/>
+  </g>
+</svg>

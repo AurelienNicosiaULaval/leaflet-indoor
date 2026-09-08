@@ -38,14 +38,34 @@ test("published pkgdown site and interactive article are reachable", async ({ pa
   expect(coordinates.status()).toBe(200);
   await expect(page.getByRole("heading", { name: "Coordinate systems" })).toBeVisible();
 
+  const photos = await page.goto(base + "/articles/photo-carousels.html", { waitUntil: "networkidle" });
+  expect(photos.status()).toBe(200);
+  await expect(page.getByRole("heading", {
+    name: "A real-world indoor map with room photos"
+  })).toBeVisible();
+  const realMap = page.locator(".leaflet.html-widget").last();
+  await expect(realMap.locator(".leaflet-tile-loaded").first()).toBeVisible();
+  await expect(realMap.locator(".leaflet-indoor-feature")).toHaveCount(51);
+  await realMap.locator(".leaflet-indoor-feature-54").click();
+  const carousel = realMap.locator('[data-indoor-photo-count="2"]');
+  await expect(carousel).toBeVisible();
+  await expect(carousel.locator("figcaption")).toContainText("Wilfredor, CC0 1.0");
+  await carousel.getByRole("button", { name: "Next" }).click();
+  await expect(carousel.locator("figcaption")).toContainText("Tangopaso, public domain");
+
   await page.setViewportSize({ width: 390, height: 700 });
-  await page.goto(base + "/articles/get-started.html", { waitUntil: "networkidle" });
+  await page.goto(base + "/articles/photo-carousels.html", { waitUntil: "networkidle" });
   await expect(page.locator(".navbar-toggler")).toBeVisible();
   await page.locator(".navbar-toggler").click();
   await expect(page.getByRole("link", { name: "Reference" })).toBeVisible();
-  const mobileControl = page.locator(".leaflet-indoor-control").first();
-  await mobileControl.scrollIntoViewIfNeeded();
-  await expect(mobileControl).toBeInViewport();
+  await page.locator(".navbar-toggler").click();
+  const mobileMap = page.locator(".leaflet.html-widget").last();
+  await mobileMap.scrollIntoViewIfNeeded();
+  await mobileMap.locator(".leaflet-indoor-feature-54").click();
+  const mobileCarousel = mobileMap.locator('[data-indoor-photo-count="2"]');
+  await mobileCarousel.getByRole("button", { name: "Next" }).click();
+  await expect(mobileCarousel.getByRole("button", { name: "Enlarge" }))
+    .toBeVisible();
   const mobileLayout = await page.evaluate(() => ({
     documentWidth: document.documentElement.scrollWidth,
     viewportWidth: window.innerWidth

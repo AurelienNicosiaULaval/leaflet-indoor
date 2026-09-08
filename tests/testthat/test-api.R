@@ -53,7 +53,7 @@ test_that("the HTML dependency is attached once and has real files", {
   dependencies <- Filter(function(x) identical(x$name, "leaflet-indoor"), map$dependencies)
   expect_length(dependencies, 1L)
   dep <- dependencies[[1]]
-  expect_identical(dep$version, "0.1.0")
+  expect_identical(dep$version, as.character(utils::packageVersion("leaflet.indoor")))
   expect_true(file.exists(file.path(dep$src$file, dep$script)))
   expect_true(file.exists(file.path(dep$src$file, dep$stylesheet)))
 })
@@ -133,11 +133,11 @@ test_that("proxy addIndoor requires explicit local coordinate mode", {
   )
 })
 
-test_that("public API signatures are stable for 0.1.0", {
+test_that("public API signatures retain the 0.1.0 arguments and add photo support", {
   expect_identical(names(formals(addIndoor)), c(
     "map", "data", "level", "dataset_id", "level_order", "initial_level",
     "layerId", "label", "popup", "style", "options", "labelOptions",
-    "popupOptions", "missing_level", "crs"
+    "popupOptions", "missing_level", "crs", "photos", "photoOptions"
   ))
   expect_identical(names(formals(addIndoorControl)), c(
     "map", "dataset_id", "control_id", "position", "options"
@@ -145,4 +145,9 @@ test_that("public API signatures are stable for 0.1.0", {
   expect_identical(names(formals(setIndoorLevel)), c("map", "level", "dataset_id"))
   expect_identical(names(formals(removeIndoorControl)), c("map", "control_id"))
   expect_identical(names(formals(clearIndoor)), c("map", "dataset_id"))
+  expect_identical(names(formals(indoorPhotoCatalog)), c("layerId", "src", "caption", "alt"))
+  expect_identical(names(formals(indoorPhotoOptions)), c(
+    "previous_label", "next_label", "enlarge_label", "close_label",
+    "carousel_label", "dialog_label", "counter_label", "unavailable_label"
+  ))
 })

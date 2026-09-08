@@ -9,6 +9,7 @@ package_root <- normalizePath(file.path(dirname(script_path), "..", ".."))
 output_dir <- file.path(package_root, "tests", "browser", "output")
 if (dir.exists(output_dir)) unlink(output_dir, recursive = TRUE)
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+file.create(file.path(output_dir, "favicon.ico"))
 
 simple_map <- function(data = indoor_demo, element_id = NULL) {
   leaflet(
@@ -103,6 +104,120 @@ saveWidget(
   file.path(output_dir, "multi-data.html"),
   selfcontained = FALSE,
   title = "Multiple indoor data sets"
+)
+
+photo_directory <- system.file("examples", "photos", package = "leaflet.indoor")
+photo_catalogue <- indoorPhotoCatalog(
+  layerId = c("feature-01", "feature-01", "feature-02"),
+  src = file.path(photo_directory, c(
+    "meeting-room-entrance.svg",
+    "meeting-room-window.svg",
+    "laboratory-workbench.svg"
+  )),
+  caption = c(
+    "Entrance view of the synthetic meeting room.",
+    paste(
+      "Window-side view. This deliberately longer caption demonstrates that",
+      "the popup grows and keeps the complete caption and all controls visible."
+    ),
+    "Workbench view of the synthetic teaching laboratory."
+  )
+)
+
+photo_map <- leaflet(
+  indoor_demo,
+  width = "100%",
+  height = 600,
+  elementId = "photo-map",
+  options = leafletOptions(crs = leafletCRS("L.CRS.Simple"), minZoom = -2)
+) |>
+  addIndoor(
+    layerId = ~feature_id,
+    photos = photo_catalogue,
+    label = ~name,
+    popup = ~description,
+    style = list(fillColor = ~fill),
+    popupOptions = popupOptions(maxWidth = 360),
+    photoOptions = indoorPhotoOptions(
+      previous_label = "Précédent",
+      next_label = "Suivant",
+      enlarge_label = "Agrandir",
+      close_label = "Fermer",
+      carousel_label = "Photos de la pièce",
+      dialog_label = "Photo agrandie de la pièce",
+      counter_label = "Photo {current} sur {total}",
+      unavailable_label = "Image indisponible"
+    ),
+    crs = "simple"
+  ) |>
+  addIndoorControl(position = "bottomright")
+
+saveWidget(
+  photo_map,
+  file.path(output_dir, "photo-carousel.html"),
+  selfcontained = FALSE,
+  title = "Indoor room photo carousel"
+)
+
+louvre_rooms <- sf::st_read(
+  system.file(
+    "examples", "real", "louvre-rooms.geojson",
+    package = "leaflet.indoor"
+  ),
+  quiet = TRUE
+)
+louvre_photo_directory <- system.file(
+  "examples", "real", "photos",
+  package = "leaflet.indoor"
+)
+louvre_photos <- indoorPhotoCatalog(
+  layerId = rep("osm-way-394887893", 2),
+  src = file.path(louvre_photo_directory, c(
+    "louvre-caryatides-main.jpg",
+    "louvre-caryatides-reopening.jpg"
+  )),
+  caption = c(
+    "Salle des Caryatides. Photo: Wilfredor, CC0 1.0.",
+    "Salle des Caryatides. Photo: Tangopaso, public domain."
+  )
+)
+louvre_rooms$fill <- ifelse(
+  louvre_rooms$name == "Salle des Caryatides",
+  "#c43c2e",
+  c(`-2` = "#6b7280", `0` = "#2f7d65", `1` = "#3568a8")[louvre_rooms$level]
+)
+louvre_map <- leaflet(
+  louvre_rooms,
+  width = "100%",
+  height = 600,
+  elementId = "louvre-map"
+) |>
+  addTiles() |>
+  addIndoor(
+    level_order = c("-2", "0", "1"),
+    initial_level = "0",
+    layerId = ~feature_id,
+    photos = louvre_photos,
+    label = ~name,
+    popup = ~paste0(name, ". Level ", level, ". ", description),
+    style = list(
+      color = "#17324d",
+      weight = 2,
+      fillColor = ~fill,
+      fillOpacity = 0.72
+    ),
+    popupOptions = popupOptions(keepInView = TRUE)
+  ) |>
+  addIndoorControl(
+    position = "bottomright",
+    options = indoorControlOptions(title = "Louvre level")
+  )
+
+saveWidget(
+  louvre_map,
+  file.path(output_dir, "real-world.html"),
+  selfcontained = FALSE,
+  title = "Real Louvre indoor map"
 )
 
 rmarkdown::render(

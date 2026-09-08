@@ -83,6 +83,64 @@ indoorControlOptions <- function(
   )
 }
 
+#' Options for indoor photo carousels
+#'
+#' Controls the visible and accessible labels used by photo carousels created
+#' when [addIndoor()] receives a non-empty `photos` catalogue. Labels can be
+#' translated without changing the catalogue.
+#'
+#' @param previous_label Label for the previous-photo button.
+#' @param next_label Label for the next-photo button.
+#' @param enlarge_label Label for the button that opens the current photo and
+#'   caption in a larger dialog.
+#' @param close_label Label for the dialog close button.
+#' @param carousel_label Accessible label for the carousel.
+#' @param dialog_label Accessible label for the enlarged-photo dialog.
+#' @param counter_label Counter template containing `{current}` and `{total}`.
+#' @param unavailable_label Text shown when an image cannot be loaded.
+#'
+#' @return An object of class `leaflet_indoor_photo_options`.
+#' @export
+indoorPhotoOptions <- function(
+  previous_label = "Previous",
+  next_label = "Next",
+  enlarge_label = "Enlarge",
+  close_label = "Close",
+  carousel_label = "Room photos",
+  dialog_label = "Enlarged room photo",
+  counter_label = "Photo {current} of {total}",
+  unavailable_label = "Image unavailable"
+) {
+  labels <- list(
+    previous_label = previous_label,
+    next_label = next_label,
+    enlarge_label = enlarge_label,
+    close_label = close_label,
+    carousel_label = carousel_label,
+    dialog_label = dialog_label,
+    counter_label = counter_label,
+    unavailable_label = unavailable_label
+  )
+  for (name in names(labels)) assert_scalar_string(labels[[name]], name)
+  if (!grepl("{current}", counter_label, fixed = TRUE) ||
+        !grepl("{total}", counter_label, fixed = TRUE)) {
+    indoor_abort("`counter_label` must contain both `{current}` and `{total}`.")
+  }
+  structure(
+    list(
+      previousLabel = previous_label,
+      nextLabel = next_label,
+      enlargeLabel = enlarge_label,
+      closeLabel = close_label,
+      carouselLabel = carousel_label,
+      dialogLabel = dialog_label,
+      counterLabel = counter_label,
+      unavailableLabel = unavailable_label
+    ),
+    class = "leaflet_indoor_photo_options"
+  )
+}
+
 validate_option_list <- function(x, name) {
   if (!is.list(x) || is.null(names(x)) || any(!nzchar(names(x)))) {
     indoor_abort(sprintf("`%s` must be a named list.", name))

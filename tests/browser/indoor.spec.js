@@ -81,6 +81,133 @@ test("local and geographic maps render vector features without console errors", 
   expect(errors).toEqual([]);
 });
 
+test("room photos keep captions paired in the carousel and enlarged dialog", async ({ page }) => {
+  const errors = collectConsoleErrors(page);
+  await page.goto("http://127.0.0.1:7357/photo-carousel.html");
+  await page.locator("#photo-map .leaflet-indoor-feature-1").click();
+
+  const carousel = page.locator('[data-indoor-photo-count="2"]');
+  await expect(carousel).toBeVisible();
+  await expect(carousel).toHaveAttribute("aria-label", "Photos de la pièce");
+  await expect(carousel.locator(".leaflet-indoor-photo-popup__introduction"))
+    .toContainText("Synthetic meeting room on floor 0.");
+
+  const image = carousel.locator(".leaflet-indoor-photo-popup__image");
+  const caption = carousel.locator(".leaflet-indoor-photo-popup__caption");
+  const firstSource = await image.getAttribute("src");
+  expect(firstSource).toMatch(/^data:image\/svg\+xml;base64,/);
+  await expect(caption).toHaveText("Entrance view of the synthetic meeting room.");
+  expect(await image.evaluate(node => node.nextElementSibling === node.parentElement.querySelector("figcaption")))
+    .toBe(true);
+
+  await carousel.getByRole("button", { name: "Suivant" }).click();
+  await expect(caption).toContainText("Window-side view");
+  await expect(carousel.locator(".leaflet-indoor-photo-popup__counter"))
+    .toHaveText("Photo 2 sur 2");
+  expect(await image.getAttribute("src")).not.toBe(firstSource);
+  expect(await caption.evaluate(node => node.scrollHeight === node.clientHeight)).toBe(true);
+
+  const enlarge = carousel.getByRole("button", { name: "Agrandir" });
+  await expect(enlarge).toBeVisible();
+  await enlarge.click();
+  const dialog = page.getByRole("dialog", { name: "Photo agrandie de la pièce" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator(".leaflet-indoor-photo-dialog__caption"))
+    .toHaveText(await caption.textContent());
+  await expect(dialog.locator(".leaflet-indoor-photo-dialog__image"))
+    .toHaveAttribute("src", await image.getAttribute("src"));
+  await page.keyboard.press("Tab");
+  await expect(dialog.getByRole("button", { name: "Fermer" })).toBeFocused();
+  await dialog.getByRole("button", { name: "Fermer" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(enlarge).toBeFocused();
+  expect(errors).toEqual([]);
+});
+
+test("features without photos retain their ordinary popup", async ({ page }) => {
+  const errors = collectConsoleErrors(page);
+  await page.goto("http://127.0.0.1:7357/photo-carousel.html");
+  await page.locator('#photo-map [data-indoor-level="1"]').click();
+  await page.locator("#photo-map .leaflet-indoor-feature-6").click();
+  await expect(page.locator("#photo-map .leaflet-popup-content"))
+    .toHaveText("Synthetic reading room on floor 1.");
+  await expect(page.locator("#photo-map .leaflet-indoor-photo-popup")).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test("photo controls remain reachable with a long caption on mobile", async ({ page }) => {
+  const errors = collectConsoleErrors(page);
+  await page.setViewportSize({ width: 390, height: 700 });
+  await page.goto("http://127.0.0.1:7357/photo-carousel.html");
+  await page.locator("#photo-map .leaflet-indoor-feature-1").tap();
+  const carousel = page.locator(".leaflet-indoor-photo-popup");
+  const floorControl = page.locator("#photo-map .leaflet-indoor-control");
+  await expect(floorControl).toBeHidden();
+  await carousel.getByRole("button", { name: "Suivant" }).tap();
+  const enlarge = carousel.getByRole("button", { name: "Agrandir" });
+  await enlarge.scrollIntoViewIfNeeded();
+  await expect(enlarge).toBeVisible();
+  const metrics = await carousel.evaluate(node => ({
+    clientHeight: node.clientHeight,
+    scrollHeight: node.scrollHeight,
+    captionHeight: node.querySelector("figcaption").scrollHeight
+  }));
+  expect(metrics.clientHeight).toBeGreaterThan(0);
+  expect(metrics.scrollHeight).toBeGreaterThanOrEqual(metrics.clientHeight);
+  expect(metrics.captionHeight).toBeGreaterThan(0);
+  await enlarge.tap();
+  const panel = page.locator(".leaflet-indoor-photo-dialog__panel");
+  await expect(panel).toBeVisible();
+  const panelBox = await panel.boundingBox();
+  expect(panelBox.height).toBeLessThanOrEqual(690);
+  await page.keyboard.press("Escape");
+  await expect(panel).toHaveCount(0);
+  await page.locator("#photo-map .leaflet-popup-close-button").click();
+  await expect(floorControl).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("real Louvre data, photos, floors, and base map work together", async ({ page }) => {
+  const errors = collectConsoleErrors(page);
+  const response = await page.goto("http://127.0.0.1:7357/real-world.html");
+  expect(response.status()).toBe(200);
+
+  const map = page.locator("#louvre-map");
+  await expect(map.locator(".leaflet-tile-pane")).toHaveCount(1);
+  await expect(map.locator(".leaflet-tile-loaded").first()).toBeVisible();
+  await expect(map.locator(".leaflet-tile-loaded").first())
+    .toHaveAttribute("src", /tile\.openstreetmap\.org/);
+  await expect(map.locator(".leaflet-control-attribution"))
+    .toContainText("OpenStreetMap");
+  const floorControl = map.locator('[data-indoor-control-id="indoor"]');
+  await expect(floorControl.locator("button")).toHaveText(["1", "0", "-2"]);
+  await expect(floorControl.locator('[data-indoor-level="0"]'))
+    .toHaveAttribute("aria-checked", "true");
+
+  await map.locator(".leaflet-indoor-feature-54").click();
+  const carousel = map.locator('[data-indoor-photo-count="2"]');
+  await expect(carousel).toBeVisible();
+  const image = carousel.locator(".leaflet-indoor-photo-popup__image");
+  const caption = carousel.locator(".leaflet-indoor-photo-popup__caption");
+  const firstSource = await image.getAttribute("src");
+  expect(firstSource).toMatch(/^data:image\/jpeg;base64,/);
+  await expect(caption).toContainText("Wilfredor, CC0 1.0");
+
+  await carousel.getByRole("button", { name: "Next" }).click();
+  await expect(caption).toContainText("Tangopaso, public domain");
+  expect(await image.getAttribute("src")).not.toBe(firstSource);
+  await carousel.getByRole("button", { name: "Enlarge" }).click();
+  const dialog = page.getByRole("dialog", { name: "Enlarged room photo" });
+  await expect(dialog.locator("figcaption")).toHaveText(await caption.textContent());
+
+  await page.keyboard.press("Escape");
+  await floorControl.locator('[data-indoor-level="1"]').click();
+  await expect(floorControl.locator('[data-indoor-level="1"]'))
+    .toHaveAttribute("aria-checked", "true");
+  await expect(map.locator(".leaflet-indoor-feature-54")).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test("R Markdown and Quarto documents render interactive controls", async ({ page }) => {
   const errors = collectConsoleErrors(page);
   for (const document of ["rmarkdown-example.html", "quarto-example.html"]) {

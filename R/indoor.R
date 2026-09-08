@@ -16,12 +16,16 @@
 #'   the first floor in `level_order`.
 #' @param layerId Optional feature identifiers. Formulas are evaluated against
 #'   `data`.
+#' @param photos Optional photo catalogue created by [indoorPhotoCatalog()], or
+#'   a data frame with equivalent `layerId`, `src`, `caption`, and optional
+#'   `alt` columns. Catalogue identifiers must match `layerId` values.
 #' @param label,popup Optional tooltip and popup content. Plain strings are
 #'   escaped; wrap trusted markup in [htmltools::HTML()].
 #' @param style Optional named list of fixed, vector, or formula-driven Leaflet
 #'   path options.
 #' @param options Options created by [indoorOptions()].
 #' @param labelOptions,popupOptions Leaflet tooltip and popup options.
+#' @param photoOptions Carousel labels created by [indoorPhotoOptions()].
 #' @param missing_level Either `"error"` or `"drop"`.
 #' @param crs Coordinate interpretation. `"auto"` detects the map CRS for
 #'   ordinary maps. Use `"simple"` explicitly for local coordinates sent to a
@@ -62,7 +66,9 @@ addIndoor <- function(
   labelOptions = leaflet::labelOptions(),
   popupOptions = leaflet::popupOptions(),
   missing_level = c("error", "drop"),
-  crs = c("auto", "geographic", "simple")
+  crs = c("auto", "geographic", "simple"),
+  photos = NULL,
+  photoOptions = indoorPhotoOptions()
 ) {
   level_missing <- missing(level)
   assert_map(map)
@@ -74,6 +80,9 @@ addIndoor <- function(
   }
   if (!is.list(labelOptions)) indoor_abort("`labelOptions` must be a list.")
   if (!is.list(popupOptions)) indoor_abort("`popupOptions` must be a list.")
+  if (!inherits(photoOptions, "leaflet_indoor_photo_options")) {
+    indoor_abort("`photoOptions` must be created by `indoorPhotoOptions()`.")
+  }
 
   normalized <- normalize_indoor_data(
     data = data,
@@ -86,8 +95,8 @@ addIndoor <- function(
     crs = crs
   )
   payload <- build_indoor_payload(
-    normalized, dataset_id, layerId, label, popup, style,
-    options, labelOptions, popupOptions
+    normalized, dataset_id, layerId, photos, label, popup, style,
+    options, labelOptions, popupOptions, photoOptions
   )
 
   map <- register_indoor_dependency(map)

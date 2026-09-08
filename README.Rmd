@@ -65,6 +65,37 @@ local coordinates.
 See the [getting started article](https://aureliennicosiaulaval.github.io/leaflet-indoor/articles/get-started.html)
 for styles, multi-floor features, GeoJSON, coordinate systems, and Shiny.
 
+## Room photos
+
+Associate room identifiers with images and plain-text captions using one row
+per photo. Repeating an identifier creates a carousel in catalogue order:
+
+```r
+room_photos <- indoorPhotoCatalog(
+  layerId = c("feature-01", "feature-01"),
+  src = c("entrance.jpg", "windows.jpg"),
+  caption = c("Entrance view", "View from the windows")
+)
+
+leaflet(indoor_demo, options = leafletOptions(
+  crs = leafletCRS("L.CRS.Simple")
+)) |>
+  addIndoor(
+    layerId = ~feature_id,
+    photos = room_photos,
+    popup = ~description,
+    crs = "simple"
+  ) |>
+  addIndoorControl()
+```
+
+Existing local image files are embedded for portable saved widgets. Features
+without catalogue rows keep their ordinary popup. The Room photo carousels
+article provides a real-world demonstration using a Leaflet street map, 135
+named Louvre indoor spaces from OpenStreetMap, and public-domain room
+photographs from Wikimedia Commons. The example includes complete provenance
+and is explicitly not an official visitor or safety plan.
+
 ## Shiny
 
 Floor changes made by a user are available as

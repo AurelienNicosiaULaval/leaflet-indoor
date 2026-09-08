@@ -82,9 +82,198 @@
   text-align: center;
 }
 
+.leaflet-indoor-photo-popup {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: min(38rem, calc(100vh - 9rem));
+  max-width: min(22rem, calc(100vw - 6rem));
+  min-width: min(17rem, calc(100vw - 6rem));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.1rem;
+}
+
+.leaflet-indoor-photo-popup__introduction {
+  overflow-wrap: anywhere;
+}
+
+.leaflet-indoor-photo-popup__figure,
+.leaflet-indoor-photo-dialog__figure {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+}
+
+.leaflet-indoor-photo-popup__image {
+  background: #eef1f4;
+  border-radius: 3px 3px 0 0;
+  display: block;
+  height: auto;
+  max-height: min(18rem, 42vh);
+  max-width: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.leaflet-indoor-photo-popup__caption,
+.leaflet-indoor-photo-dialog__caption {
+  background: #f5f7f9;
+  border-radius: 0 0 3px 3px;
+  box-sizing: border-box;
+  color: #1f2933;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  padding: 0.65rem 0.75rem;
+  white-space: normal;
+  width: 100%;
+}
+
+.leaflet-indoor-photo-popup__unavailable,
+.leaflet-indoor-photo-dialog__unavailable {
+  background: #f5f7f9;
+  color: #5c6773;
+  padding: 1rem;
+  text-align: center;
+}
+
+.leaflet-indoor-photo-popup__counter {
+  color: #4a5560;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.leaflet-indoor-photo-popup__actions {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.leaflet-indoor-photo-popup__button,
+.leaflet-indoor-photo-dialog__close {
+  appearance: none;
+  background: #fff;
+  border: 1px solid #0b5cab;
+  border-radius: 3px;
+  color: #0b5cab;
+  cursor: pointer;
+  font: 600 0.88rem/1.2 Arial, sans-serif;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+  padding: 0.55rem 0.65rem;
+  touch-action: manipulation;
+}
+
+.leaflet-indoor-photo-popup__button--enlarge {
+  background: #0b5cab;
+  color: #fff;
+  grid-column: 1 / -1;
+}
+
+.leaflet-indoor-photo-popup__button:hover:not(:disabled),
+.leaflet-indoor-photo-dialog__close:hover {
+  background: #e6f0fa;
+}
+
+.leaflet-indoor-photo-popup__button--enlarge:hover:not(:disabled) {
+  background: #084985;
+}
+
+.leaflet-indoor-photo-popup__button:disabled {
+  cursor: default;
+  opacity: 0.48;
+}
+
+.leaflet-indoor-photo-popup__button:focus-visible,
+.leaflet-indoor-photo-dialog__close:focus-visible {
+  outline: 3px solid #ffbf47;
+  outline-offset: 2px;
+}
+
+.leaflet-indoor-photo-dialog {
+  align-items: center;
+  background: rgba(15, 23, 42, 0.82);
+  box-sizing: border-box;
+  display: flex;
+  font: 14px/1.45 Arial, sans-serif;
+  inset: 0;
+  justify-content: center;
+  padding: clamp(0.75rem, 3vw, 2rem);
+  position: fixed;
+  z-index: 10000;
+}
+
+.leaflet-indoor-photo-dialog__panel {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: calc(100vh - 1.5rem);
+  max-width: min(72rem, calc(100vw - 1.5rem));
+  overflow: auto;
+  padding: 0.85rem;
+  width: max-content;
+}
+
+.leaflet-indoor-photo-dialog__close {
+  align-self: flex-end;
+  flex: 0 0 auto;
+  min-width: 6rem;
+}
+
+.leaflet-indoor-photo-dialog__image {
+  background: #eef1f4;
+  display: block;
+  height: auto;
+  max-height: calc(100vh - 13rem);
+  max-width: min(68rem, calc(100vw - 3.25rem));
+  object-fit: contain;
+  width: auto;
+}
+
+.leaflet-indoor-photo-dialog__caption {
+  max-width: min(68rem, calc(100vw - 3.25rem));
+}
+
 @media (max-width: 480px) {
+  .leaflet-container.leaflet-indoor-photo-popup-open .leaflet-popup-pane {
+    z-index: 1100;
+  }
+
+  .leaflet-container.leaflet-indoor-photo-popup-open .leaflet-indoor-control {
+    pointer-events: none;
+    visibility: hidden;
+  }
+
   .leaflet-indoor-control {
     font-size: 13px;
     max-width: 10rem;
+  }
+
+  .leaflet-indoor-photo-popup {
+    max-height: calc(100vh - 7rem);
+    max-width: calc(100vw - 5rem);
+    min-width: min(15rem, calc(100vw - 5rem));
+  }
+
+  .leaflet-indoor-photo-dialog {
+    padding: 0.5rem;
+  }
+
+  .leaflet-indoor-photo-dialog__panel {
+    max-height: calc(100vh - 1rem);
+    max-width: calc(100vw - 1rem);
+    padding: 0.65rem;
+  }
+
+  .leaflet-indoor-photo-dialog__image,
+  .leaflet-indoor-photo-dialog__caption {
+    max-width: calc(100vw - 2.3rem);
   }
 }

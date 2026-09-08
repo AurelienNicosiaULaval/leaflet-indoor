@@ -25,6 +25,8 @@ navbar:
         href: articles/coordinate-systems.html
       - text: Shiny integration
         href: articles/shiny.html
+      - text: Real-world photo example
+        href: articles/photo-carousels.html
     github:
       icon: fab fa-github
       href: https://github.com/AurelienNicosiaULaval/leaflet-indoor
@@ -43,6 +45,10 @@ reference:
   contents:
   - indoorOptions
   - indoorControlOptions
+  - indoorPhotoOptions
+- title: Room photos
+  contents:
+  - indoorPhotoCatalog
 - title: Example data
   contents:
   - indoor_demo
@@ -57,3 +63,4 @@ articles:
 - title: Applications
   contents:
   - shiny
+  - photo-carousels

@@ -1,3 +1,10 @@
+# leaflet.indoor (development version)
+
+* Adds photo catalogues and accessible room-photo carousels with paired
+  captions, previous/next navigation, and an enlarged dialog.
+* Adds a fully attributed real-world Louvre example using 135 named
+  OpenStreetMap indoor spaces and public-domain Wikimedia Commons photos.
+
 # leaflet.indoor 0.1.0
 
 Initial experimental release.

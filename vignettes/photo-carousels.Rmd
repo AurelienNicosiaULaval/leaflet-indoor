@@ -1,0 +1,178 @@
+---
+title: "A real-world indoor map with room photos"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{A real-world indoor map with room photos}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(leaflet)
+library(leaflet.indoor)
+library(sf)
+```
+
+This example uses a real place, real indoor geometry, a real Leaflet base map,
+and real photographs. It combines 135 named indoor spaces at the Louvre Museum
+in Paris from a dated OpenStreetMap snapshot with two Wikimedia Commons
+photographs of the Salle des Caryatides.
+
+The example is intended to demonstrate the software, not to replace the
+Louvre's official visitor, accessibility, evacuation, or safety information.
+OpenStreetMap is maintained by contributors and indoor details can change.
+
+## Inspect the real room data
+
+The bundled GeoJSON uses EPSG:4326 coordinates. Its 135 polygons cover three
+OpenStreetMap levels and retain the source way identifiers needed for
+traceability. The source snapshot is bundled in `data-raw/`, so rebuilding the
+example does not silently replace the plan with newer community edits.
+
+```{r real-data}
+room_file <- system.file(
+  "examples", "real", "louvre-rooms.geojson",
+  package = "leaflet.indoor"
+)
+louvre_rooms <- st_read(room_file, quiet = TRUE)
+
+table(louvre_rooms$level)
+head(st_drop_geometry(louvre_rooms)[c("feature_id", "level", "name")])
+```
+
+The mapped spaces include the Hall Napoléon, the Salle de la Vénus de Milo,
+the Salle des Caryatides, the Galerie d'Apollon, and the Grande Galerie. The
+room names and geometries are those recorded in the cited OpenStreetMap ways,
+not manually invented coordinates.
+
+## Associate photographs with a room
+
+Use one catalogue row per image. Repeating the room identifier produces a
+carousel in row order. Here, both rows target OpenStreetMap way 394887893, the
+Salle des Caryatides.
+
+```{r real-photos}
+photo_directory <- system.file(
+  "examples", "real", "photos",
+  package = "leaflet.indoor"
+)
+
+louvre_photos <- indoorPhotoCatalog(
+  layerId = rep("osm-way-394887893", 2),
+  src = file.path(photo_directory, c(
+    "louvre-caryatides-main.jpg",
+    "louvre-caryatides-reopening.jpg"
+  )),
+  caption = c(
+    paste(
+      "Salle des Caryatides, photographed in 2024.",
+      "Photo: Wilfredor, CC0 1.0, via Wikimedia Commons."
+    ),
+    paste(
+      "Salle des Caryatides shortly after the Louvre reopened in 2021.",
+      "Photo: Tangopaso, public domain, via Wikimedia Commons."
+    )
+  ),
+  alt = c(
+    "Wide interior view of the Salle des Caryatides at the Louvre",
+    "Interior of the Salle des Caryatides with few visitors"
+  )
+)
+
+data.frame(
+  layerId = louvre_photos$layerId,
+  caption = louvre_photos$caption
+)
+```
+
+Existing local images are embedded as image data URIs. The interactive map is
+therefore portable even though the source files are local package assets.
+
+## Explore the map
+
+Select level `0`, then click the red Salle des Caryatides polygon. The popup
+keeps the ordinary room description and adds the two-photo carousel. Use
+Previous and Next to change photos, and Enlarge to open the current image with
+its matching caption. Rooms without catalogue rows retain their ordinary
+popup.
+
+```{r real-map, out.width='100%'}
+louvre_rooms$fill <- ifelse(
+  louvre_rooms$name == "Salle des Caryatides",
+  "#c43c2e",
+  c(`-2` = "#6b7280", `0` = "#2f7d65", `1` = "#3568a8")[louvre_rooms$level]
+)
+
+leaflet(louvre_rooms) |>
+  addTiles() |>
+  addIndoor(
+    level = "level",
+    level_order = c("-2", "0", "1"),
+    initial_level = "0",
+    layerId = ~feature_id,
+    photos = louvre_photos,
+    label = ~name,
+    popup = ~paste0(name, ". Level ", level, ". ", description),
+    style = list(
+      color = "#17324d",
+      weight = 2,
+      fillColor = ~fill,
+      fillOpacity = 0.72
+    ),
+    popupOptions = popupOptions(keepInView = TRUE)
+  ) |>
+  addIndoorControl(
+    position = "bottomright",
+    options = indoorControlOptions(title = "Louvre level")
+  )
+```
+
+This rendered map exercises the geographic path of `addIndoor()`: real
+longitude and latitude coordinates are displayed over live OpenStreetMap
+tiles, exactly one floor is active, and photographs are joined through the
+same stable identifiers used by the vector features.
+
+## Data and image provenance
+
+The source extract was downloaded on 2026-09-08 from the official OpenStreetMap
+API. The example selects all 135 named indoor rooms or areas on levels `-2`,
+`0`, and `1` within that extract. OpenStreetMap data is copyright OpenStreetMap
+contributors and licensed under the
+[ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/). See the
+[OpenStreetMap copyright page](https://www.openstreetmap.org/copyright).
+
+The first photograph is by Wilfredor and is available under
+[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) on
+[Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Salle_des_Caryatides,_Louvre,_Paris.jpg).
+The second photograph is by Tangopaso, who dedicated it to the public domain,
+and is also available on
+[Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Salle_des_Caryatides_d%C3%A9serte_%C3%A0_la_r%C3%A9ouverture_du_Louvre.jpg).
+The package includes full machine-readable source URLs and a detailed
+attribution file with these example assets.
+
+## Adapt the pattern
+
+For another building, provide an `sf` object with stable room identifiers and a
+level column, then build the same one-row-per-photo association. The optional
+`alt` column should describe the image for people who cannot see it. Captions
+and alternative text are treated as plain text.
+
+All carousel labels can be translated:
+
+```r
+indoorPhotoOptions(
+  previous_label = "Précédent",
+  next_label = "Suivant",
+  enlarge_label = "Agrandir",
+  close_label = "Fermer",
+  carousel_label = "Photos de la pièce",
+  dialog_label = "Photo agrandie de la pièce",
+  counter_label = "Photo {current} sur {total}",
+  unavailable_label = "Image indisponible"
+)
+```
+
+The fully offline synthetic example remains available through
+`system.file("examples", "photo-carousel.R", package = "leaflet.indoor")` for
+tests and environments where live map tiles are unavailable.

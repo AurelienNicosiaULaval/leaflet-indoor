@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-labelledby="title description">
+  <title id="title">Synthetic meeting room window view</title>
+  <desc id="description">An illustrated meeting room viewed toward large windows and a presentation wall.</desc>
+  <rect width="800" height="500" fill="#f4f1e9"/>
+  <rect y="340" width="800" height="160" fill="#b8a78c"/>
+  <rect x="45" y="45" width="430" height="240" rx="5" fill="#a8d8ef" stroke="#35596b" stroke-width="9"/>
+  <path d="M188 45v240M332 45v240M45 165h430" stroke="#ffffff" stroke-width="8" opacity=".9"/>
+  <circle cx="415" cy="95" r="35" fill="#ffe07a"/>
+  <path d="M45 235l95-75 75 55 80-90 120 110v50H45z" fill="#739d72" opacity=".9"/>
+  <rect x="545" y="65" width="205" height="155" rx="5" fill="#ffffff" stroke="#6d7c85" stroke-width="8"/>
+  <path d="M580 175l45-45 35 25 55-60" fill="none" stroke="#0b5cab" stroke-width="10"/>
+  <path d="M205 355h390l-55 95H260z" fill="#7ea1a6" stroke="#34555d" stroke-width="7"/>
+  <g fill="#335f74">
+    <rect x="155" y="360" width="62" height="90" rx="14"/>
+    <rect x="585" y="360" width="62" height="90" rx="14"/>
+  </g>
+</svg>
