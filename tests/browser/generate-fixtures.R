@@ -171,25 +171,40 @@ louvre_photo_directory <- system.file(
   package = "leaflet.indoor"
 )
 louvre_photos <- indoorPhotoCatalog(
-  layerId = rep("osm-way-394887893", 2),
+  layerId = c(
+    rep("osm-way-394887893", 2),
+    "osm-way-453817508",
+    rep("osm-way-367790015", 2)
+  ),
   src = file.path(louvre_photo_directory, c(
     "louvre-caryatides-main.jpg",
-    "louvre-caryatides-reopening.jpg"
+    "louvre-caryatides-reopening.jpg",
+    "louvre-venus-room.jpg",
+    "louvre-apollon-main.jpg",
+    "louvre-apollon-ceiling.jpg"
   )),
   caption = c(
     "Salle des Caryatides. Photo: Wilfredor, CC0 1.0.",
-    "Salle des Caryatides. Photo: Tangopaso, public domain."
+    "Salle des Caryatides. Photo: Tangopaso, public domain.",
+    "Salle de la Vénus de Milo. Photo: Shonagon, CC0 1.0.",
+    "Galerie d'Apollon. Photo: Wilfredor, CC0 1.0.",
+    "Ceiling of the Galerie d'Apollon. Photo: Gary Todd, CC0 1.0."
   )
 )
+photo_room_names <- c(
+  "Salle des Caryatides",
+  "Salle de la Vénus de Milo",
+  "Galerie d'Apollon"
+)
 louvre_rooms$fill <- ifelse(
-  louvre_rooms$name == "Salle des Caryatides",
+  louvre_rooms$name %in% photo_room_names,
   "#c43c2e",
   c(`-2` = "#6b7280", `0` = "#2f7d65", `1` = "#3568a8")[louvre_rooms$level]
 )
 louvre_map <- leaflet(
   louvre_rooms,
   width = "100%",
-  height = 600,
+  height = 480,
   elementId = "louvre-map"
 ) |>
   addTiles() |>

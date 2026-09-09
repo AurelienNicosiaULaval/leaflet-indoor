@@ -52,6 +52,17 @@ test("published pkgdown site and interactive article are reachable", async ({ pa
   await expect(carousel.locator("figcaption")).toContainText("Wilfredor, CC0 1.0");
   await carousel.getByRole("button", { name: "Next" }).click();
   await expect(carousel.locator("figcaption")).toContainText("Tangopaso, public domain");
+  await realMap.locator(".leaflet-popup-close-button").last().click();
+  await realMap.locator(".leaflet-indoor-feature-53").click();
+  await expect(realMap.locator('[data-indoor-photo-count="1"] figcaption'))
+    .toContainText("Shonagon, CC0 1.0");
+  await realMap.locator(".leaflet-popup-close-button").last().click();
+  await realMap.locator('[data-indoor-level="1"]').click();
+  await realMap.locator(".leaflet-indoor-feature-86").click();
+  const apollon = realMap.locator('[data-indoor-photo-count="2"]').last();
+  await expect(apollon.locator("figcaption")).toContainText("Galerie d'Apollon");
+  await apollon.getByRole("button", { name: "Next" }).click();
+  await expect(apollon.locator("figcaption")).toContainText("Gary Todd, CC0 1.0");
 
   await page.setViewportSize({ width: 390, height: 700 });
   await page.goto(base + "/articles/photo-carousels.html", { waitUntil: "networkidle" });

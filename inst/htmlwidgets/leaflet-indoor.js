@@ -81,6 +81,26 @@
     if (popup && typeof popup.update === "function") popup.update();
   }
 
+  function updatePhotoPopupHeight(map, root) {
+    var container = map && map.getContainer ? map.getContainer() : null;
+    var mapHeight = container ? container.clientHeight : 0;
+    if (mapHeight > 0) {
+      var maxHeight = Math.max(160, mapHeight - 112);
+      root.style.maxHeight = String(maxHeight) + "px";
+      var image = root.querySelector(".leaflet-indoor-photo-popup__image");
+      if (image && !image.hidden && image.offsetHeight > 0) {
+        image.style.maxHeight = "";
+        var naturalDisplayHeight = image.offsetHeight;
+        var nonImageHeight = root.scrollHeight - naturalDisplayHeight;
+        var availableImageHeight = Math.max(72, maxHeight - nonImageHeight);
+        image.style.maxHeight = String(
+          Math.min(naturalDisplayHeight, availableImageHeight)
+        ) + "px";
+        root.scrollTop = 0;
+      }
+    }
+  }
+
   function closePhotoDialog(dataset) {
     if (dataset && typeof dataset.closePhotoDialog === "function") {
       dataset.closePhotoDialog();
@@ -224,6 +244,7 @@
       event.preventDefault();
       openPhotoDialog(dataset, photos[index], enlarge);
     });
+    updatePhotoPopupHeight(map, root);
     render();
     return root;
   }
@@ -244,14 +265,22 @@
         var hasPhotos = Array.isArray(props.leafletIndoorPhotos) &&
           props.leafletIndoorPhotos.length > 0;
         if (hasPhotos) {
+          var carousel = createPhotoCarousel(map, dataset, layer, props);
+          function syncPhotoPopupLayout() {
+            updatePhotoPopupHeight(map, carousel);
+            updatePopupLayout(layer);
+          }
           layer.bindPopup(
-            createPhotoCarousel(map, dataset, layer, props),
+            carousel,
             dataset.popupOptions || {}
           );
           layer.on("popupopen", function() {
             L.DomUtil.addClass(map.getContainer(), "leaflet-indoor-photo-popup-open");
+            syncPhotoPopupLayout();
+            map.on("resize", syncPhotoPopupLayout);
           });
           layer.on("popupclose", function() {
+            map.off("resize", syncPhotoPopupLayout);
             L.DomUtil.removeClass(map.getContainer(), "leaflet-indoor-photo-popup-open");
             closePhotoDialog(dataset);
           });

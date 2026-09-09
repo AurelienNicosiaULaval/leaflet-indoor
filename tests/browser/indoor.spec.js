@@ -201,10 +201,39 @@ test("real Louvre data, photos, floors, and base map work together", async ({ pa
   await expect(dialog.locator("figcaption")).toHaveText(await caption.textContent());
 
   await page.keyboard.press("Escape");
+  await map.locator(".leaflet-popup-close-button").last().click();
+  await map.locator(".leaflet-indoor-feature-53").click();
+  const venusPhoto = map.locator('[data-indoor-photo-count="1"]');
+  await expect(venusPhoto.locator("figcaption"))
+    .toContainText("Shonagon, CC0 1.0");
+  await expect(venusPhoto.getByRole("button", { name: "Enlarge" })).toBeVisible();
+  const venusLayout = await venusPhoto.evaluate(node => ({
+    clientHeight: node.clientHeight,
+    scrollHeight: node.scrollHeight,
+    captionBottom: node.querySelector("figcaption").getBoundingClientRect().bottom,
+    actionsTop: node.querySelector(".leaflet-indoor-photo-popup__actions")
+      .getBoundingClientRect().top
+  }));
+  expect(venusLayout.scrollHeight).toBeLessThanOrEqual(venusLayout.clientHeight + 1);
+  expect(venusLayout.captionBottom).toBeLessThanOrEqual(venusLayout.actionsTop + 1);
+  const mapBox = await map.boundingBox();
+  const popupBox = await map.locator(".leaflet-popup").last().boundingBox();
+  expect(popupBox.y).toBeGreaterThanOrEqual(mapBox.y - 2);
+  expect(popupBox.y + popupBox.height)
+    .toBeLessThanOrEqual(mapBox.y + mapBox.height + 2);
+  await map.locator(".leaflet-popup-close-button").last().click();
+
   await floorControl.locator('[data-indoor-level="1"]').click();
   await expect(floorControl.locator('[data-indoor-level="1"]'))
     .toHaveAttribute("aria-checked", "true");
   await expect(map.locator(".leaflet-indoor-feature-54")).toHaveCount(0);
+  await map.locator(".leaflet-indoor-feature-86").click();
+  const apollonCarousel = map.locator('[data-indoor-photo-count="2"]').last();
+  await expect(apollonCarousel.locator("figcaption"))
+    .toContainText("Galerie d'Apollon");
+  await apollonCarousel.getByRole("button", { name: "Next" }).click();
+  await expect(apollonCarousel.locator("figcaption"))
+    .toContainText("Gary Todd, CC0 1.0");
   expect(errors).toEqual([]);
 });
 

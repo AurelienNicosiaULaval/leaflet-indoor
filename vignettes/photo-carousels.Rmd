@@ -16,8 +16,8 @@ library(sf)
 
 This example uses a real place, real indoor geometry, a real Leaflet base map,
 and real photographs. It combines 135 named indoor spaces at the Louvre Museum
-in Paris from a dated OpenStreetMap snapshot with two Wikimedia Commons
-photographs of the Salle des Caryatides.
+in Paris from a dated OpenStreetMap snapshot with five Wikimedia Commons
+photographs associated with three distinct rooms on levels `0` and `1`.
 
 The example is intended to demonstrate the software, not to replace the
 Louvre's official visitor, accessibility, evacuation, or safety information.
@@ -48,9 +48,10 @@ not manually invented coordinates.
 
 ## Associate photographs with a room
 
-Use one catalogue row per image. Repeating the room identifier produces a
-carousel in row order. Here, both rows target OpenStreetMap way 394887893, the
-Salle des Caryatides.
+Use one catalogue row per image. Repeating a room identifier produces a
+carousel in row order. This catalogue associates two photographs with the
+Salle des Caryatides, one with the Salle de la Vénus de Milo, and two with the
+Galerie d'Apollon.
 
 ```{r real-photos}
 photo_directory <- system.file(
@@ -59,10 +60,17 @@ photo_directory <- system.file(
 )
 
 louvre_photos <- indoorPhotoCatalog(
-  layerId = rep("osm-way-394887893", 2),
+  layerId = c(
+    rep("osm-way-394887893", 2),
+    "osm-way-453817508",
+    rep("osm-way-367790015", 2)
+  ),
   src = file.path(photo_directory, c(
     "louvre-caryatides-main.jpg",
-    "louvre-caryatides-reopening.jpg"
+    "louvre-caryatides-reopening.jpg",
+    "louvre-venus-room.jpg",
+    "louvre-apollon-main.jpg",
+    "louvre-apollon-ceiling.jpg"
   )),
   caption = c(
     paste(
@@ -72,11 +80,26 @@ louvre_photos <- indoorPhotoCatalog(
     paste(
       "Salle des Caryatides shortly after the Louvre reopened in 2021.",
       "Photo: Tangopaso, public domain, via Wikimedia Commons."
+    ),
+    paste(
+      "Salle de la Vénus de Milo, photographed in 2016.",
+      "Photo: Shonagon, CC0 1.0, via Wikimedia Commons."
+    ),
+    paste(
+      "Galerie d'Apollon, photographed in 2024.",
+      "Photo: Wilfredor, CC0 1.0, via Wikimedia Commons."
+    ),
+    paste(
+      "Ceiling of the Galerie d'Apollon, photographed in 2016.",
+      "Photo: Gary Todd, CC0 1.0, via Wikimedia Commons."
     )
   ),
   alt = c(
     "Wide interior view of the Salle des Caryatides at the Louvre",
-    "Interior of the Salle des Caryatides with few visitors"
+    "Interior of the Salle des Caryatides with few visitors",
+    "Salle de la Vénus de Milo with the sculpture centered in the room",
+    "Long interior view of the decorated Galerie d'Apollon",
+    "Painted and gilded ceiling of the Galerie d'Apollon"
   )
 )
 
@@ -91,20 +114,26 @@ therefore portable even though the source files are local package assets.
 
 ## Explore the map
 
-Select level `0`, then click the red Salle des Caryatides polygon. The popup
-keeps the ordinary room description and adds the two-photo carousel. Use
-Previous and Next to change photos, and Enlarge to open the current image with
-its matching caption. Rooms without catalogue rows retain their ordinary
-popup.
+Red polygons identify rooms with photographs. On level `0`, click the Salle des
+Caryatides to see a two-photo carousel or the Salle de la Vénus de Milo to see
+its room photograph. Then select level `1` and click the Galerie d'Apollon for
+a second two-photo carousel. Use Previous and Next to change photos, and
+Enlarge to open the current image with its matching caption. Rooms without
+catalogue rows retain their ordinary popup.
 
 ```{r real-map, out.width='100%'}
+photo_room_names <- c(
+  "Salle des Caryatides",
+  "Salle de la Vénus de Milo",
+  "Galerie d'Apollon"
+)
 louvre_rooms$fill <- ifelse(
-  louvre_rooms$name == "Salle des Caryatides",
+  louvre_rooms$name %in% photo_room_names,
   "#c43c2e",
   c(`-2` = "#6b7280", `0` = "#2f7d65", `1` = "#3568a8")[louvre_rooms$level]
 )
 
-leaflet(louvre_rooms) |>
+leaflet(louvre_rooms, height = 600) |>
   addTiles() |>
   addIndoor(
     level = "level",
@@ -142,14 +171,23 @@ contributors and licensed under the
 [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/). See the
 [OpenStreetMap copyright page](https://www.openstreetmap.org/copyright).
 
-The first photograph is by Wilfredor and is available under
+The first Salle des Caryatides photograph is by Wilfredor and is available under
 [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) on
 [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Salle_des_Caryatides,_Louvre,_Paris.jpg).
-The second photograph is by Tangopaso, who dedicated it to the public domain,
+The second Salle des Caryatides photograph is by Tangopaso, who dedicated it to the public domain,
 and is also available on
 [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Salle_des_Caryatides_d%C3%A9serte_%C3%A0_la_r%C3%A9ouverture_du_Louvre.jpg).
-The package includes full machine-readable source URLs and a detailed
-attribution file with these example assets.
+
+The Salle de la Vénus de Milo photograph is by Shonagon and is available under
+[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) on
+[Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Salle_de_la_V%C3%A9nus_de_Milo.jpg).
+The two Galerie d'Apollon photographs are by Wilfredor and Gary Todd,
+respectively, and are both available under CC0 1.0 on
+[Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Galerie_d%27Apollon_%28Louvre%29.jpg)
+and
+[Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Ceiling_of_the_Galerie_d%27Apollon_%2828253516576%29.jpg).
+The package includes full source URLs and a detailed attribution file with all
+five example assets.
 
 ## Adapt the pattern
 

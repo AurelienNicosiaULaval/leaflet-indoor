@@ -147,9 +147,14 @@
 }
 
 .leaflet-indoor-photo-popup__actions {
+  background: #fff;
   display: grid;
   gap: 0.45rem;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  bottom: 0;
+  padding-top: 0.1rem;
+  position: sticky;
+  z-index: 1;
 }
 
 .leaflet-indoor-photo-popup__button,

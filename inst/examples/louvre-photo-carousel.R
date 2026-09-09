@@ -16,10 +16,17 @@ photo_directory <- system.file(
   package = "leaflet.indoor"
 )
 louvre_photos <- indoorPhotoCatalog(
-  layerId = rep("osm-way-394887893", 2),
+  layerId = c(
+    rep("osm-way-394887893", 2),
+    "osm-way-453817508",
+    rep("osm-way-367790015", 2)
+  ),
   src = file.path(photo_directory, c(
     "louvre-caryatides-main.jpg",
-    "louvre-caryatides-reopening.jpg"
+    "louvre-caryatides-reopening.jpg",
+    "louvre-venus-room.jpg",
+    "louvre-apollon-main.jpg",
+    "louvre-apollon-ceiling.jpg"
   )),
   caption = c(
     paste(
@@ -29,17 +36,41 @@ louvre_photos <- indoorPhotoCatalog(
     paste(
       "Salle des Caryatides shortly after the Louvre reopened in 2021.",
       "Photo: Tangopaso, public domain, via Wikimedia Commons."
+    ),
+    paste(
+      "Salle de la Vénus de Milo, photographed in 2016.",
+      "Photo: Shonagon, CC0 1.0, via Wikimedia Commons."
+    ),
+    paste(
+      "Galerie d'Apollon, photographed in 2024.",
+      "Photo: Wilfredor, CC0 1.0, via Wikimedia Commons."
+    ),
+    paste(
+      "Ceiling of the Galerie d'Apollon, photographed in 2016.",
+      "Photo: Gary Todd, CC0 1.0, via Wikimedia Commons."
     )
+  ),
+  alt = c(
+    "Wide interior view of the Salle des Caryatides at the Louvre",
+    "Interior of the Salle des Caryatides with few visitors",
+    "Salle de la Vénus de Milo with the sculpture centered in the room",
+    "Long interior view of the decorated Galerie d'Apollon",
+    "Painted and gilded ceiling of the Galerie d'Apollon"
   )
 )
 
+photo_room_names <- c(
+  "Salle des Caryatides",
+  "Salle de la Vénus de Milo",
+  "Galerie d'Apollon"
+)
 louvre_rooms$fill <- ifelse(
-  louvre_rooms$name == "Salle des Caryatides",
+  louvre_rooms$name %in% photo_room_names,
   "#c43c2e",
   c(`-2` = "#6b7280", `0` = "#2f7d65", `1` = "#3568a8")[louvre_rooms$level]
 )
 
-leaflet(louvre_rooms) |>
+leaflet(louvre_rooms, height = 600) |>
   addTiles() |>
   addIndoor(
     level_order = c("-2", "0", "1"),

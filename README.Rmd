@@ -92,9 +92,10 @@ leaflet(indoor_demo, options = leafletOptions(
 Existing local image files are embedded for portable saved widgets. Features
 without catalogue rows keep their ordinary popup. The Room photo carousels
 article provides a real-world demonstration using a Leaflet street map, 135
-named Louvre indoor spaces from OpenStreetMap, and public-domain room
-photographs from Wikimedia Commons. The example includes complete provenance
-and is explicitly not an official visitor or safety plan.
+named Louvre indoor spaces from OpenStreetMap, and five public-domain
+photographs associated with three rooms on two floors. The Wikimedia Commons
+example includes complete provenance and is explicitly not an official visitor
+or safety plan.
 
 ## Shiny
 

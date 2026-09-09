@@ -100,12 +100,30 @@ photo_sources <- c(
     "Salle_des_Caryatides_d%C3%A9serte_%C3%A0_la_r%C3%A9ouverture_du_Louvre.jpg/",
     "1280px-Salle_des_Caryatides_d%C3%A9serte_",
     "%C3%A0_la_r%C3%A9ouverture_du_Louvre.jpg"
+  ),
+  "louvre-venus-room.jpg" = paste0(
+    "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/36/",
+    "Salle_de_la_V%C3%A9nus_de_Milo.jpg/",
+    "1280px-Salle_de_la_V%C3%A9nus_de_Milo.jpg"
+  ),
+  "louvre-apollon-main.jpg" = paste0(
+    "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/",
+    "Galerie_d%27Apollon_%28Louvre%29.jpg/",
+    "1280px-Galerie_d%27Apollon_%28Louvre%29.jpg"
+  ),
+  "louvre-apollon-ceiling.jpg" = paste0(
+    "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d3/",
+    "Ceiling_of_the_Galerie_d%27Apollon_%2828253516576%29.jpg/",
+    "1280px-Ceiling_of_the_Galerie_d%27Apollon_%2828253516576%29.jpg"
   )
 )
 
 photo_checksums <- c(
   "louvre-caryatides-main.jpg" = "489575dc45072fee2cba3658ba808c68",
-  "louvre-caryatides-reopening.jpg" = "68dc4311bf9fc7cb014ac15041a6a2f0"
+  "louvre-caryatides-reopening.jpg" = "68dc4311bf9fc7cb014ac15041a6a2f0",
+  "louvre-venus-room.jpg" = "87f974d7db9a3b80f237a49dbcabace1",
+  "louvre-apollon-main.jpg" = "cb82ff412d471c2e28226c88f6cb2d41",
+  "louvre-apollon-ceiling.jpg" = "0961c756d20d0b4ac7e43959ffeefa35"
 )
 
 for (file_name in names(photo_sources)) {

@@ -3,7 +3,8 @@
 * Adds photo catalogues and accessible room-photo carousels with paired
   captions, previous/next navigation, and an enlarged dialog.
 * Adds a fully attributed real-world Louvre example using 135 named
-  OpenStreetMap indoor spaces and public-domain Wikimedia Commons photos.
+  OpenStreetMap indoor spaces and five public-domain Wikimedia Commons photos
+  associated with three rooms on two floors.
 
 # leaflet.indoor 0.1.0
 

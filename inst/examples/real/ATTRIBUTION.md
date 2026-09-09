@@ -16,8 +16,9 @@ and room name, and serialized as GeoJSON.
 - Snapshot API request: <https://api.openstreetmap.org/api/0.6/map?bbox=2.335,48.859,2.340,48.8612>
 - License: <https://opendatacommons.org/licenses/odbl/1-0/>
 
-The bundled photographs show the Salle des Caryatides at the Louvre. They are
-stored at 1280-pixel resolution without visual modification.
+The five bundled photographs show three mapped rooms at the Louvre: the Salle
+des Caryatides, the Salle de la Vénus de Milo, and the Galerie d'Apollon. They
+are stored at 1280-pixel resolution without visual modification.
 
 ## louvre-caryatides-main.jpg
 
@@ -36,6 +37,33 @@ stored at 1280-pixel resolution without visual modification.
 - Source: <https://commons.wikimedia.org/wiki/File:Salle_des_Caryatides_d%C3%A9serte_%C3%A0_la_r%C3%A9ouverture_du_Louvre.jpg>
 - License: Public domain dedication by the creator
 - License statement: <https://commons.wikimedia.org/wiki/File:Salle_des_Caryatides_d%C3%A9serte_%C3%A0_la_r%C3%A9ouverture_du_Louvre.jpg#Licensing>
+
+## louvre-venus-room.jpg
+
+- Title: Salle de la Vénus de Milo
+- Creator: Shonagon
+- Date: 2016-10-17
+- Source: <https://commons.wikimedia.org/wiki/File:Salle_de_la_V%C3%A9nus_de_Milo.jpg>
+- License: CC0 1.0 Universal Public Domain Dedication
+- License URL: <https://creativecommons.org/publicdomain/zero/1.0/>
+
+## louvre-apollon-main.jpg
+
+- Title: Galerie d'Apollon (Louvre)
+- Creator: Wilfredor
+- Date: 2024-01-29
+- Source: <https://commons.wikimedia.org/wiki/File:Galerie_d%27Apollon_%28Louvre%29.jpg>
+- License: CC0 1.0 Universal Public Domain Dedication
+- License URL: <https://creativecommons.org/publicdomain/zero/1.0/>
+
+## louvre-apollon-ceiling.jpg
+
+- Title: Ceiling of the Galerie d'Apollon
+- Creator: Gary Todd
+- Date: 2016-07-13
+- Source: <https://commons.wikimedia.org/wiki/File:Ceiling_of_the_Galerie_d%27Apollon_%2828253516576%29.jpg>
+- License: CC0 1.0 Universal Public Domain Dedication
+- License URL: <https://creativecommons.org/publicdomain/zero/1.0/>
 
 This example is for software demonstration. OpenStreetMap is a
 community-maintained data source, and this extract is not an official Louvre
