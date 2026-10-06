@@ -336,13 +336,20 @@
       decoded.innerHTML = properties.leafletIndoorLabel;
       label += ": " + decoded.textContent;
     }
-    var marker = L.marker([position.lat, position.lng], {
+    var useEdge = options.placement !== "center";
+    var anchor = useEdge && position.edge ? position.edge : position;
+    var marker = L.marker([anchor.lat, anchor.lng], {
       icon: commentIcon(options),
       title: label,
       keyboard: true,
       interactive: dataset.options.interactive !== false,
       bubblingMouseEvents: false
     });
+    var connector = useEdge ? L.polyline([[anchor.lat, anchor.lng], [anchor.lat, anchor.lng]], {
+      color: options.backgroundColor || "#7c3aed", weight: 1.5, opacity: 0.85,
+      interactive: false, className: "leaflet-indoor-comment-connector"
+    }) : null;
+    if (connector) dataset.groups[level].addLayer(connector);
     var root = createCommentPopup(dataset, properties);
     marker.bindPopup(root, mergeOptions({maxWidth: 360, keepInView: true}, dataset.popupOptions));
     function syncIconSize() {
@@ -366,8 +373,30 @@
       badge.style.height = String(size) + "px";
       badge.style.fontSize = String(size * 0.6) + "px";
       badge.style.borderWidth = String(Math.max(1, size / 18)) + "px";
+      var offsetX = 0;
+      var offsetY = 0;
+      var halfTarget = marker.options.icon.options.iconSize[0] / 2;
+      if (useEdge && typeof map.getZoom() === "number") {
+        var edgePoint = map.project([anchor.lat, anchor.lng], map.getZoom());
+        var roomPoint = map.project([position.lat, position.lng], map.getZoom());
+        var direction = edgePoint.subtract(roomPoint);
+        var distance = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
+        var unitX = distance > 0 ? direction.x / distance : Math.SQRT1_2;
+        var unitY = distance > 0 ? direction.y / distance : -Math.SQRT1_2;
+        // Move the whole clickable square beyond the edge, including its
+        // transparent margins. The room reference point remains unobstructed.
+        var offset = halfTarget * (Math.abs(unitX) + Math.abs(unitY)) + 4;
+        offsetX = unitX * offset;
+        offsetY = unitY * offset;
+        var lineEnd = edgePoint.add(L.point(unitX * (offset - size / 2),
+          unitY * (offset - size / 2)));
+        connector.setLatLngs([[anchor.lat, anchor.lng], map.unproject(lineEnd, map.getZoom())]);
+      }
+      marker.options.icon.options.iconAnchor = [halfTarget - offsetX, halfTarget - offsetY];
+      element.style.marginLeft = String(offsetX - halfTarget) + "px";
+      element.style.marginTop = String(offsetY - halfTarget) + "px";
       // Keep the pointer of an open popup attached to the visual badge.
-      marker.options.icon.options.popupAnchor = [0, -size / 2];
+      marker.options.icon.options.popupAnchor = [offsetX, offsetY - size / 2];
       if (marker.isPopupOpen()) updatePopupLayout(marker);
     }
     function syncLayout() {

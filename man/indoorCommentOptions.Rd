@@ -14,7 +14,8 @@ indoorCommentOptions(
   source_label = "Read source",
   size = 36,
   min_size = 12,
-  fit_to_room = TRUE
+  fit_to_room = TRUE,
+  placement = "edge"
 )
 }
 \arguments{
@@ -40,6 +41,11 @@ label, when supplied, is appended automatically.}
 \item{fit_to_room}{Scale the badge and its icon with the room's projected
 size as the map zoom changes. Point features retain \code{size}. The clickable
 target remains at least 44 pixels for touch and keyboard access.}
+
+\item{placement}{\code{"edge"} places the icon just outside the room's exterior
+boundary, with a short connector, leaving the room available for clicks.
+\code{"center"} places it at the interior reference point. Point and line
+features without an exterior ring use an offset from their reference point.}
 }
 \value{
 An object of class \code{leaflet_indoor_comment_options}.

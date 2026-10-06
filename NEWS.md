@@ -1,5 +1,9 @@
 # leaflet.indoor (development version)
 
+* Comment icons now sit outside the room's exterior edge, with a short
+  connector, leaving the room available for its normal popup or photos.
+  `placement = "center"` retains placement at the interior reference point.
+
 * Comment badges and their icons now resize together when zooming, fitting
   the room's projected size within configurable minimum and maximum diameters.
 * Single-floor datasets render correctly when their floor name is serialized

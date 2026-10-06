@@ -104,7 +104,7 @@ resolve_room_comments <- function(comments, ids) {
   })
 }
 
-# Compute an anchor on the feature surface, including concave rooms and holes.
+# Compute a room reference point and an anchor on its exterior boundary.
 # Indoor coordinates use a planar calculation in the normalized map units.
 comment_position <- function(feature) {
   geometry_json <- jsonlite::toJSON(feature$geometry, auto_unbox = TRUE, digits = NA)
@@ -114,5 +114,19 @@ comment_position <- function(feature) {
   if (nrow(coordinates) != 1L || any(!is.finite(coordinates[1, 1:2]))) {
     indoor_abort("A comment icon requires a non-empty feature geometry.")
   }
-  list(lng = unname(coordinates[1, 1]), lat = unname(coordinates[1, 2]))
+  position <- list(lng = unname(coordinates[1, 1]), lat = unname(coordinates[1, 2]))
+  geometry_type <- as.character(sf::st_geometry_type(geometry))
+  if (geometry_type %in% c("POLYGON", "MULTIPOLYGON")) {
+    parts <- sf::st_cast(geometry, "POLYGON")
+    point <- sf::st_sfc(sf::st_point(coordinates[1, 1:2]))
+    containing <- sf::st_intersects(point, parts)[[1]]
+    if (length(containing)) {
+      # Only the exterior ring is eligible: a hole is not a room exit.
+      exterior <- sf::st_sfc(sf::st_linestring(parts[[containing[[1]]]][[1]]))
+      nearest <- sf::st_coordinates(sf::st_nearest_points(point, exterior))
+      edge <- nearest[nrow(nearest), 1:2]
+      position$edge <- list(lng = unname(edge[[1]]), lat = unname(edge[[2]]))
+    }
+  }
+  position
 }

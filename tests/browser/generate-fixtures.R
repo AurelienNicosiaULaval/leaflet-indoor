@@ -271,7 +271,7 @@ saveWidget(comment_map, file.path(output_dir, "comments.html"), selfcontained = 
 fixed_comment_map <- leaflet(indoor_demo, height = 520, elementId = "fixed-comment-map",
   options = leafletOptions(crs = leafletCRS("L.CRS.Simple"), minZoom = -2)) |>
   addIndoor(layerId = ~feature_id, comments = room_comments,
-    commentOptions = indoorCommentOptions(size = 28, fit_to_room = FALSE),
+    commentOptions = indoorCommentOptions(size = 28, fit_to_room = FALSE, placement = "center"),
     crs = "simple") |>
   addIndoorControl()
 saveWidget(fixed_comment_map, file.path(output_dir, "comments-fixed.html"),

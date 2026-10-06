@@ -49,20 +49,27 @@ leaflet(indoor_demo, height = 480, options = leafletOptions(
   addIndoorControl(position = "bottomright")
 ```
 
-Click the purple speech bubble in the Meeting room to read two comments.
+Click the purple speech bubble beside the Meeting room to read two comments.
 Choose floor `1` to see the Reading room's icon. Icons also work with Enter
 and Space; Escape closes the comment popup and returns focus to its icon.
 Long comment lists scroll within the popup.
 
-The icon is placed on the feature surface, including concave rooms and rooms
-with holes. Placement uses a planar calculation in the map's normalized
-coordinates, suitable for building-scale maps.
+The room reference point stays on the feature surface, including concave
+rooms and rooms with holes. The exterior-edge anchor uses a planar calculation
+in the map's normalized coordinates, suitable for building-scale maps.
 
 ## Choose an icon and translate the labels
 
 The `icon` argument accepts `"comment"`, `"quote"`, and `"info"`, or a short
 plain-text symbol. Built-in icons use bundled SVG paths and need no external
 font or icon service. Colors use hexadecimal notation.
+
+By default, `placement = "edge"` puts each badge just outside the room's
+exterior boundary. A short connector identifies its room, and the entire
+clickable target is offset to keep the room's interior reference point free
+for its normal popup or photos. Holes are excluded when choosing the edge.
+Use `placement = "center"` to place the badge at the interior reference point.
+Point and line features use a nearby offset when they have no exterior ring.
 
 The badge and its icon resize together as the map zoom changes. By default,
 the visual diameter fits 75% of the room's shorter projected bounding-box

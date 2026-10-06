@@ -157,6 +157,10 @@ indoorPhotoOptions <- function(
 #' @param fit_to_room Scale the badge and its icon with the room's projected
 #'   size as the map zoom changes. Point features retain `size`. The clickable
 #'   target remains at least 44 pixels for touch and keyboard access.
+#' @param placement `"edge"` places the icon just outside the room's exterior
+#'   boundary, with a short connector, leaving the room available for clicks.
+#'   `"center"` places it at the interior reference point. Point and line
+#'   features without an exterior ring use an offset from their reference point.
 #' @return An object of class `leaflet_indoor_comment_options`.
 #' @export
 #' @examples
@@ -168,7 +172,8 @@ indoorCommentOptions <- function(icon = "comment", color = "#ffffff",
                                  marker_label = "Read room comments",
                                  popup_label = "Room comments",
                                  source_label = "Read source", size = 36,
-                                 min_size = 12, fit_to_room = TRUE) {
+                                 min_size = 12, fit_to_room = TRUE,
+                                 placement = "edge") {
   assert_scalar_string(icon, "icon")
   if (nchar(icon, type = "chars") > 16L) {
     indoor_abort("`icon` must be a bundled icon name or a short plain-text symbol (at most 16 characters).")
@@ -193,10 +198,15 @@ indoorCommentOptions <- function(icon = "comment", color = "#ffffff",
   }
   if (min_size > size) indoor_abort("`min_size` must not exceed `size`.")
   assert_scalar_logical(fit_to_room, "fit_to_room")
+  assert_scalar_string(placement, "placement")
+  if (!placement %in% c("edge", "center")) {
+    indoor_abort("`placement` must be \"edge\" or \"center\".")
+  }
   structure(list(icon = icon, color = color, backgroundColor = background_color,
                  show = show, markerLabel = marker_label,
                  popupLabel = popup_label, sourceLabel = source_label,
-                 size = unname(size), minSize = unname(min_size), fitToRoom = fit_to_room),
+                 size = unname(size), minSize = unname(min_size), fitToRoom = fit_to_room,
+                 placement = placement),
             class = "leaflet_indoor_comment_options")
 }
 

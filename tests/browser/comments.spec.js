@@ -100,6 +100,7 @@ test("a configured fixed badge size remains unchanged by zoom", async ({ page })
   const icon = page.locator('[data-indoor-comment-id="feature-01"]');
   await expect(icon).toBeVisible();
   expect((await iconDimensions(icon)).badge).toBeCloseTo(28, 1);
+  await expect(page.locator(".leaflet-indoor-comment-connector")).toHaveCount(0);
   await zoom(page, "out", 3);
   expect((await iconDimensions(icon)).badge).toBeCloseTo(28, 1);
   await zoom(page, "in", 3);
@@ -107,11 +108,55 @@ test("a configured fixed badge size remains unchanged by zoom", async ({ page })
   expect(errors).toEqual([]);
 });
 
+for (const mobile of [false, true]) {
+  test(`room centers open photos separately from edge comment icons${mobile ? " on mobile" : " on desktop"}`, async ({ page }) => {
+    const errors = collectErrors(page);
+    if (mobile) await page.setViewportSize({ width: 390, height: 700 });
+    await page.goto("http://127.0.0.1:7357/comments.html");
+    const room = page.locator(".leaflet-indoor-feature-1");
+    const icon = page.locator('[data-indoor-comment-id="feature-01"]');
+    const accounts = page.getByRole("region", { name: "Témoignages" });
+    await expect(page.locator(".leaflet-indoor-comment-connector")).toHaveCount(2);
+    for (const direction of [null, "out", "in"]) {
+      // Long comment popups can pan the map. Start each zoom case with the
+      // meeting room in view so the pointer click tests hit routing, not clipping.
+      await page.reload();
+      await expect(room).toBeVisible();
+      await page.locator(".leaflet-container").evaluate(node => {
+        HTMLWidgets.find(`#${node.id}`).getMap().panTo([3, 4], { animate: false });
+      });
+      if (direction) await zoom(page, direction);
+      const bounds = await room.boundingBox();
+      const center = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+      const target = await icon.boundingBox();
+      expect(center.x < target.x || center.x > target.x + target.width ||
+        center.y < target.y || center.y > target.y + target.height).toBe(true);
+      // A real pointer click at the room center must reach the room itself.
+      await page.mouse.click(center.x, center.y);
+      await expect(page.locator('[data-indoor-photo-count="2"]')).toBeVisible();
+      await expect(accounts).toHaveCount(0);
+      await page.locator(".leaflet-popup-close-button").click();
+      await expect(page.locator(".leaflet-popup-content")).toHaveCount(0);
+      // Photo auto-pan can leave the outside badge below a small viewport.
+      await page.locator(".leaflet-container").evaluate(node => {
+        HTMLWidgets.find(`#${node.id}`).getMap().panTo([3, 4], { animate: false });
+      });
+      if (mobile) await icon.tap(); else await icon.click();
+      await expect(accounts).toBeVisible();
+      await expect(page.locator(".leaflet-indoor-photo-popup")).toHaveCount(0);
+      await page.keyboard.press("Escape");
+      await expect(accounts).toHaveCount(0);
+    }
+    expect(errors).toEqual([]);
+  });
+}
+
 test("point and multipoint comments retain their size without room polygons", async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto("http://127.0.0.1:7357/comments-points.html");
   const icons = page.locator(".leaflet-indoor-comment-marker");
   await expect(icons).toHaveCount(2);
+  await expect(page.locator(".leaflet-indoor-comment-connector")).toHaveCount(2);
   await zoom(page, "out", 5);
   for (const icon of await icons.all()) {
     expect((await iconDimensions(icon)).badge).toBeCloseTo(36, 1);
@@ -201,6 +246,11 @@ test("Louvre icons show verified accounts in the correct rooms and floors", asyn
   const icons = page.locator(".leaflet-indoor-comment-marker");
   await expect(icons).toHaveCount(1);
   const venus = page.locator('[data-indoor-comment-id="osm-way-453817508"]');
+  await page.locator(".leaflet-indoor-feature-53").click();
+  await expect(page.locator('[data-indoor-photo-count="1"]')).toBeVisible();
+  await expect(page.locator(".leaflet-indoor-comment-popup")).toHaveCount(0);
+  await page.locator(".leaflet-popup-close-button").click();
+  await expect(page.locator(".leaflet-popup-content")).toHaveCount(0);
   await venus.click();
   const popup = page.getByRole("region", { name: "Visitor accounts" });
   await expect(popup).toContainText("Jitka Tupa");
@@ -219,6 +269,11 @@ test("Louvre icons show verified accounts in the correct rooms and floors", asyn
     .toHaveAttribute("href", /blogs\.uml\.edu/);
   await page.keyboard.press("Escape");
   await expect(popup).toHaveCount(0);
+  await page.locator(".leaflet-indoor-feature-86").click();
+  await expect(page.locator('[data-indoor-photo-count="2"]')).toBeVisible();
+  await expect(popup).toHaveCount(0);
+  await page.locator(".leaflet-popup-close-button").click();
+  await expect(page.locator(".leaflet-popup-content")).toHaveCount(0);
   await page.locator('[data-indoor-comment-id="osm-way-367790015"]').click();
   await expect(popup).toContainText("Michele (Malaysian Meanders)");
   await expect(popup).toContainText("Published 2013-09-04");
@@ -239,6 +294,7 @@ test("Shiny receives comment events and proxy replacement and clearing remove ic
   await expect(page.locator("#selected-feature")).toContainText("NULL");
   await page.getByRole("button", { name: "Hide comments" }).click();
   await expect(page.locator(".leaflet-indoor-comment-marker")).toHaveCount(0);
+  await expect(page.locator(".leaflet-indoor-comment-connector")).toHaveCount(0);
   await expect(page.locator(".leaflet-indoor-comment-popup")).toHaveCount(0);
   await expect(page.locator(".leaflet-indoor-feature").first()).toBeVisible();
   await page.getByRole("button", { name: "Clear indoor map" }).click();

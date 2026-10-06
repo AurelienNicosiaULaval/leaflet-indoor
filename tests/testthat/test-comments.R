@@ -51,6 +51,9 @@ test_that("icons have safe customization and localizable labels", {
   expect_error(indoorCommentOptions(min_size = 40), "must not exceed")
   expect_error(indoorCommentOptions(fit_to_room = NA), "TRUE or FALSE")
   expect_identical(indoorCommentOptions(size = 28, min_size = 10)$size, 28)
+  expect_identical(indoorCommentOptions()$placement, "edge")
+  expect_identical(indoorCommentOptions(placement = "center")$placement, "center")
+  expect_error(indoorCommentOptions(placement = "unknown"), "`placement`")
   expect_error(local_map() |> addIndoor(commentOptions = list(), crs = "simple"), "indoorCommentOptions")
 })
 
@@ -67,7 +70,25 @@ test_that("comment anchors stay on concave polygon surfaces outside holes", {
     position <- payload$geojson$features[[i]]$properties$leafletIndoorCommentPosition
     point <- sf::st_sfc(sf::st_point(c(position$lng, position$lat)))
     expect_true(sf::st_within(point, sf::st_geometry(rooms[i, ]), sparse = FALSE)[1, 1])
+    edge <- sf::st_sfc(sf::st_point(c(position$edge$lng, position$edge$lat)))
+    exterior <- sf::st_sfc(sf::st_linestring(sf::st_geometry(rooms)[[i]][[1]]))
+    expect_equal(as.numeric(sf::st_distance(edge, exterior)), 0, tolerance = 1e-10)
+    expect_gt(as.numeric(sf::st_distance(point, edge)), 0)
   }
+})
+
+test_that("multipolygon comment edges belong to the component containing the reference point", {
+  parts <- unclass(sf::st_geometry(indoor_demo)[[8]])
+  parts <- sf::st_sfc(lapply(parts, sf::st_polygon))
+  room <- indoor_demo[8, ]
+  payload <- indoor_call(local_map(room) |> addIndoor(layerId = ~feature_id,
+    comments = indoorCommentCatalog(room$feature_id, "A comment"), crs = "simple"))
+  position <- payload$geojson$features[[1]]$properties$leafletIndoorCommentPosition
+  point <- sf::st_sfc(sf::st_point(c(position$lng, position$lat)))
+  containing <- sf::st_intersects(point, parts)[[1]]
+  edge <- sf::st_sfc(sf::st_point(c(position$edge$lng, position$edge$lat)))
+  expect_equal(as.numeric(sf::st_distance(edge, sf::st_boundary(parts[containing]))), 0,
+    tolerance = 1e-10)
 })
 
 test_that("comments work with geographic, GeoJSON, and mixed geometry inputs", {
