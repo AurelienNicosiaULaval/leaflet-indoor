@@ -268,6 +268,25 @@ comment_map <- leaflet(indoor_demo, height = 520, elementId = "comment-map",
 saveWidget(comment_map, file.path(output_dir, "comments.html"), selfcontained = FALSE,
   title = "Indoor room comments")
 
+fixed_comment_map <- leaflet(indoor_demo, height = 520, elementId = "fixed-comment-map",
+  options = leafletOptions(crs = leafletCRS("L.CRS.Simple"), minZoom = -2)) |>
+  addIndoor(layerId = ~feature_id, comments = room_comments,
+    commentOptions = indoorCommentOptions(size = 28, fit_to_room = FALSE),
+    crs = "simple") |>
+  addIndoorControl()
+saveWidget(fixed_comment_map, file.path(output_dir, "comments-fixed.html"),
+  selfcontained = FALSE, title = "Fixed comment icon size")
+
+point_features <- indoor_demo[c(5, 10), ]
+point_features$level <- "0"
+point_comment_map <- leaflet(point_features, height = 520, elementId = "point-comment-map",
+  options = leafletOptions(crs = leafletCRS("L.CRS.Simple"), minZoom = -2)) |>
+  addIndoor(layerId = ~feature_id,
+    comments = indoorCommentCatalog(point_features$feature_id, "Point feature comment"),
+    crs = "simple")
+saveWidget(point_comment_map, file.path(output_dir, "comments-points.html"),
+  selfcontained = FALSE, title = "Point feature comments")
+
 louvre_comments_example <- source(
   system.file("examples", "louvre-photo-carousel.R", package = "leaflet.indoor"),
   local = new.env(parent = globalenv())

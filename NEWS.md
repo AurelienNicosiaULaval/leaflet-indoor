@@ -1,5 +1,10 @@
 # leaflet.indoor (development version)
 
+* Comment badges and their icons now resize together when zooming, fitting
+  the room's projected size within configurable minimum and maximum diameters.
+* Single-floor datasets render correctly when their floor name is serialized
+  as a scalar string by htmlwidgets.
+
 * Adds optional room comments and attributed testimonials through
   `indoorCommentCatalog()`, with customizable icons and translated labels from
   `indoorCommentOptions()`. Comment icons follow the active floor and support

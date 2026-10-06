@@ -11,7 +11,10 @@ indoorCommentOptions(
   show = TRUE,
   marker_label = "Read room comments",
   popup_label = "Room comments",
-  source_label = "Read source"
+  source_label = "Read source",
+  size = 36,
+  min_size = 12,
+  fit_to_room = TRUE
 )
 }
 \arguments{
@@ -29,6 +32,14 @@ label, when supplied, is appended automatically.}
 \item{popup_label}{Heading displayed above the room comments.}
 
 \item{source_label}{Label for each comment's source link.}
+
+\item{size}{Maximum visual badge diameter in CSS pixels.}
+
+\item{min_size}{Minimum visual badge diameter when fitting to a room.}
+
+\item{fit_to_room}{Scale the badge and its icon with the room's projected
+size as the map zoom changes. Point features retain \code{size}. The clickable
+target remains at least 44 pixels for touch and keyboard access.}
 }
 \value{
 An object of class \code{leaflet_indoor_comment_options}.

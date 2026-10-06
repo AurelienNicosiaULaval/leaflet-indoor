@@ -250,6 +250,7 @@
   }
 
   function commentIcon(options) {
+    var targetSize = Math.max(44, (options.size || 36) + 8);
     var badge = document.createElement("span");
     badge.className = "leaflet-indoor-comment-marker__badge";
     badge.style.color = options.color || "#ffffff";
@@ -277,8 +278,8 @@
     return L.divIcon({
       className: "leaflet-indoor-comment-marker",
       html: badge.outerHTML,
-      iconSize: [44, 44],
-      iconAnchor: [22, 22],
+      iconSize: [targetSize, targetSize],
+      iconAnchor: [targetSize / 2, targetSize / 2],
       popupAnchor: [0, -20]
     });
   }
@@ -323,7 +324,7 @@
     return root;
   }
 
-  function commentMarkerForFeature(map, dataset, level, feature) {
+  function commentMarkerForFeature(map, dataset, level, feature, roomLayer) {
     var properties = feature.properties;
     var options = dataset.commentOptions;
     var comments = properties.leafletIndoorComments;
@@ -344,6 +345,31 @@
     });
     var root = createCommentPopup(dataset, properties);
     marker.bindPopup(root, mergeOptions({maxWidth: 360, keepInView: true}, dataset.popupOptions));
+    function syncIconSize() {
+      var element = marker.getElement();
+      if (!element) return;
+      var size = options.size || 36;
+      if (options.fitToRoom !== false && !/^(Multi)?Point$/.test(feature.geometry.type)) {
+        var bounds = roomLayer.getBounds();
+        if (bounds.isValid() && bounds.getEast() !== bounds.getWest() &&
+            bounds.getNorth() !== bounds.getSouth() && typeof map.getZoom() === "number") {
+          // Project without rounding so small rooms keep shrinking at distant zooms.
+          var northwest = map.project(bounds.getNorthWest(), map.getZoom());
+          var southeast = map.project(bounds.getSouthEast(), map.getZoom());
+          var roomSize = Math.min(Math.abs(southeast.x - northwest.x),
+            Math.abs(southeast.y - northwest.y));
+          size = Math.max(options.minSize || 12, Math.min(size, roomSize * 0.75));
+        }
+      }
+      var badge = element.querySelector(".leaflet-indoor-comment-marker__badge");
+      badge.style.width = String(size) + "px";
+      badge.style.height = String(size) + "px";
+      badge.style.fontSize = String(size * 0.6) + "px";
+      badge.style.borderWidth = String(Math.max(1, size / 18)) + "px";
+      // Keep the pointer of an open popup attached to the visual badge.
+      marker.options.icon.options.popupAnchor = [0, -size / 2];
+      if (marker.isPopupOpen()) updatePopupLayout(marker);
+    }
     function syncLayout() {
       root.style.maxHeight = String(Math.max(96, map.getContainer().clientHeight - 130)) + "px";
       var popup = marker.getPopup();
@@ -357,6 +383,8 @@
       element.setAttribute("aria-label", label);
       element.setAttribute("aria-expanded", "false");
       element.setAttribute("data-indoor-comment-id", properties.leafletIndoorLayerId);
+      syncIconSize();
+      map.on("zoomend resize", syncIconSize);
       if (dataset.options.interactive === false) element.tabIndex = -1;
       L.DomEvent.on(element, "keydown", function(event) {
         if (event.key === " " && dataset.options.interactive !== false) {
@@ -364,6 +392,9 @@
           marker.fire("click", {latlng: marker.getLatLng()});
         }
       });
+    });
+    marker.on("remove", function() {
+      map.off("zoomend resize", syncIconSize);
     });
     marker.on("popupopen", function() {
       marker.getElement().setAttribute("aria-expanded", "true");
@@ -478,6 +509,8 @@
       closePhotoDialog: null,
       crs: payload.crs
     };
+    // htmlwidgets serializes a single floor name as a scalar string.
+    if (!Array.isArray(dataset.levels)) dataset.levels = [dataset.levels];
     dataset.levels.forEach(function(level) {
       dataset.groups[level] = L.featureGroup();
     });
@@ -488,8 +521,9 @@
       if (!Array.isArray(levels)) levels = [levels];
       levels.forEach(function(level) {
         if (dataset.groups[level]) {
-          dataset.groups[level].addLayer(layerForFeature(map, dataset, level, feature));
-          var commentMarker = commentMarkerForFeature(map, dataset, level, feature);
+          var roomLayer = layerForFeature(map, dataset, level, feature);
+          dataset.groups[level].addLayer(roomLayer);
+          var commentMarker = commentMarkerForFeature(map, dataset, level, feature, roomLayer);
           if (commentMarker) dataset.groups[level].addLayer(commentMarker);
         }
       });

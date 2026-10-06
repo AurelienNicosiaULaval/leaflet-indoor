@@ -7,6 +7,122 @@ function collectErrors(page) {
   return errors;
 }
 
+async function zoom(page, direction, steps = 1) {
+  const map = page.locator(".leaflet-container");
+  const button = page.getByRole("button", { name: `Zoom ${direction}`, exact: true });
+  for (let index = 0; index < steps; index++) {
+    if ((await button.getAttribute("class")).includes("leaflet-disabled")) break;
+    const previous = await map.evaluate(node => HTMLWidgets.find(`#${node.id}`).getMap().getZoom());
+    await button.click();
+    // Leaflet starts its animation on the next frame. Wait for the public zoom
+    // value to change before clicking again, otherwise rapid clicks are ignored.
+    await expect.poll(() => map.evaluate(node => HTMLWidgets.find(`#${node.id}`).getMap().getZoom()))
+      .toBe(previous + (direction === "in" ? 1 : -1));
+  }
+}
+
+async function iconDimensions(icon) {
+  return icon.evaluate(node => {
+    const target = node.getBoundingClientRect();
+    const badge = node.querySelector(".leaflet-indoor-comment-marker__badge");
+    const circle = badge.getBoundingClientRect();
+    const svg = badge.querySelector("svg");
+    return {
+      badge: circle.width,
+      icon: svg ? svg.getBoundingClientRect().width : parseFloat(getComputedStyle(badge).fontSize),
+      target: target.width,
+      centered: Math.abs(circle.x + circle.width / 2 - target.x - target.width / 2) < 1 &&
+        Math.abs(circle.y + circle.height / 2 - target.y - target.height / 2) < 1
+    };
+  });
+}
+
+test("Louvre badges and vector icons resize together and stay centered at every zoom", async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.route("https://*.tile.openstreetmap.org/**", route => route.fulfill({ status: 200, body: "" }));
+  await page.goto("http://127.0.0.1:7357/louvre-comments.html");
+  const venus = page.locator('[data-indoor-comment-id="osm-way-453817508"]');
+  await expect(venus).toBeVisible();
+  await zoom(page, "in", 3);
+  const large = await iconDimensions(venus);
+  expect(large.badge).toBeCloseTo(36, 1);
+  await zoom(page, "out", 4);
+  const small = await iconDimensions(venus);
+  expect(small.badge).toBeLessThan(large.badge);
+  expect(small.icon).toBeLessThan(large.icon);
+  // Distant zooms must not make a tiny room revert to a full-size badge.
+  await zoom(page, "out", 5);
+  const distant = await iconDimensions(venus);
+  expect(distant.badge).toBeCloseTo(12, 1);
+  for (const dimensions of [large, small, distant]) {
+    expect(dimensions.icon / dimensions.badge).toBeGreaterThanOrEqual(0.49);
+    expect(dimensions.icon / dimensions.badge).toBeLessThanOrEqual(0.61);
+    expect(dimensions.target).toBeGreaterThanOrEqual(44);
+    expect(dimensions.centered).toBe(true);
+  }
+  await venus.click();
+  await expect(page.getByRole("region", { name: "Visitor accounts" })).toContainText("Jitka Tupa");
+  await zoom(page, "in");
+  await expect(page.getByRole("region", { name: "Visitor accounts" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.locator('[data-indoor-level="1"]').click();
+  const states = page.locator('[data-indoor-comment-id="osm-way-492611500"]');
+  expect((await iconDimensions(states)).badge).toBeCloseTo(12, 1);
+  expect(errors).toEqual([]);
+});
+
+test("custom symbols follow badge size on mobile and remain clickable after zooming", async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.setViewportSize({ width: 390, height: 700 });
+  await page.goto("http://127.0.0.1:7357/comments.html");
+  const icon = page.locator('[data-indoor-comment-id="feature-01"]');
+  await expect(icon).toBeVisible();
+  await zoom(page, "in", 2);
+  const large = await iconDimensions(icon);
+  await zoom(page, "out", 6);
+  const small = await iconDimensions(icon);
+  expect(small.badge).toBeLessThan(large.badge);
+  for (const dimensions of [large, small]) {
+    expect(dimensions.icon / dimensions.badge).toBeCloseTo(0.6, 1);
+    expect(dimensions.centered).toBe(true);
+    expect(dimensions.target).toBeGreaterThanOrEqual(44);
+  }
+  await icon.tap();
+  await expect(page.getByRole("region", { name: "Témoignages" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(icon).toBeFocused();
+  expect(errors).toEqual([]);
+});
+
+test("a configured fixed badge size remains unchanged by zoom", async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto("http://127.0.0.1:7357/comments-fixed.html");
+  const icon = page.locator('[data-indoor-comment-id="feature-01"]');
+  await expect(icon).toBeVisible();
+  expect((await iconDimensions(icon)).badge).toBeCloseTo(28, 1);
+  await zoom(page, "out", 3);
+  expect((await iconDimensions(icon)).badge).toBeCloseTo(28, 1);
+  await zoom(page, "in", 3);
+  expect((await iconDimensions(icon)).badge).toBeCloseTo(28, 1);
+  expect(errors).toEqual([]);
+});
+
+test("point and multipoint comments retain their size without room polygons", async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto("http://127.0.0.1:7357/comments-points.html");
+  const icons = page.locator(".leaflet-indoor-comment-marker");
+  await expect(icons).toHaveCount(2);
+  await zoom(page, "out", 5);
+  for (const icon of await icons.all()) {
+    expect((await iconDimensions(icon)).badge).toBeCloseTo(36, 1);
+  }
+  await zoom(page, "in", 3);
+  for (const icon of await icons.all()) {
+    expect((await iconDimensions(icon)).badge).toBeCloseTo(36, 1);
+  }
+  expect(errors).toEqual([]);
+});
+
 test("comment icons show only rooms with accounts, escape text, and follow floors", async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto("http://127.0.0.1:7357/comments.html");

@@ -47,6 +47,10 @@ test_that("icons have safe customization and localizable labels", {
   expect_error(indoorCommentOptions(icon = ""), "`icon`")
   expect_error(indoorCommentOptions(color = "url(example.org)"), "hexadecimal")
   expect_error(indoorCommentOptions(show = NA), "TRUE or FALSE")
+  expect_error(indoorCommentOptions(size = Inf), "finite number")
+  expect_error(indoorCommentOptions(min_size = 40), "must not exceed")
+  expect_error(indoorCommentOptions(fit_to_room = NA), "TRUE or FALSE")
+  expect_identical(indoorCommentOptions(size = 28, min_size = 10)$size, 28)
   expect_error(local_map() |> addIndoor(commentOptions = list(), crs = "simple"), "indoorCommentOptions")
 })
 

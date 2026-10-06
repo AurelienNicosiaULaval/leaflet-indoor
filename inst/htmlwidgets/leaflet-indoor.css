@@ -22,8 +22,9 @@
 }
 
 .leaflet-indoor-comment-marker__badge svg {
-  height: 22px;
-  width: 22px;
+  height: 60%;
+  width: 60%;
+  flex-shrink: 0;
 }
 
 .leaflet-indoor-comment-marker:focus-visible {

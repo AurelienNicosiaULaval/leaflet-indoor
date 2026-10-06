@@ -64,6 +64,14 @@ The `icon` argument accepts `"comment"`, `"quote"`, and `"info"`, or a short
 plain-text symbol. Built-in icons use bundled SVG paths and need no external
 font or icon service. Colors use hexadecimal notation.
 
+The badge and its icon resize together as the map zoom changes. By default,
+the visual diameter fits 75% of the room's shorter projected bounding-box
+dimension, bounded by `min_size = 12` and `size = 36` pixels. The minimum
+preserves visibility when a room becomes very small. Point features retain
+the configured size. The clickable target remains at least 44 pixels.
+Use `fit_to_room = FALSE` for a fixed visual diameter, or choose different
+`size` and `min_size` values.
+
 ```{r comment-options}
 indoorCommentOptions(
   icon = "quote",
