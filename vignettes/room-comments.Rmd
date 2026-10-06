@@ -1,0 +1,141 @@
+---
+title: "Room comments and visitor accounts"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Room comments and visitor accounts}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(leaflet)
+library(leaflet.indoor)
+```
+
+Use a separate clickable icon to indicate that a room has comments or visitor
+accounts. A room's ordinary popup and photo carousel remain available by
+clicking the room itself. Only the active floor's comment icons are displayed.
+
+## Associate comments with rooms
+
+Use one row per comment. Repeating a `layerId` displays several comments in
+catalogue order. Only rooms with catalogue entries receive an icon. The
+following comments are explicitly fictional demonstration text.
+
+```{r synthetic-comments}
+room_comments <- indoorCommentCatalog(
+  layerId = c("feature-01", "feature-01", "feature-06"),
+  text = c(
+    "A quiet place for our group discussion.",
+    "The entrance was easy to find.",
+    "I enjoyed the reading space upstairs."
+  ),
+  author = c("Example visitor A", "Example visitor B", "Example visitor C"),
+  title = "Fictional demonstration comment"
+)
+
+leaflet(indoor_demo, height = 480, options = leafletOptions(
+  crs = leafletCRS("L.CRS.Simple")
+)) |>
+  addIndoor(
+    layerId = ~feature_id,
+    label = ~name,
+    popup = ~description,
+    comments = room_comments,
+    commentOptions = indoorCommentOptions(icon = "comment"),
+    crs = "simple"
+  ) |>
+  addIndoorControl(position = "bottomright")
+```
+
+Click the purple speech bubble in the Meeting room to read two comments.
+Choose floor `1` to see the Reading room's icon. Icons also work with Enter
+and Space; Escape closes the comment popup and returns focus to its icon.
+Long comment lists scroll within the popup.
+
+The icon is placed on the feature surface, including concave rooms and rooms
+with holes. Placement uses a planar calculation in the map's normalized
+coordinates, suitable for building-scale maps.
+
+## Choose an icon and translate the labels
+
+The `icon` argument accepts `"comment"`, `"quote"`, and `"info"`, or a short
+plain-text symbol. Built-in icons use bundled SVG paths and need no external
+font or icon service. Colors use hexadecimal notation.
+
+```{r comment-options}
+indoorCommentOptions(
+  icon = "quote",
+  background_color = "#7c3aed",
+  marker_label = "Lire les témoignages",
+  popup_label = "Témoignages",
+  source_label = "Lire la source"
+)
+
+indoorCommentOptions(icon = "\u2605", background_color = "#0b5cab")
+```
+
+Set `show = FALSE` to retain the comments without drawing their icons, or
+omit `comments` entirely. Replacing or clearing an indoor data set also
+replaces or clears its comment markers. Comment fields are always plain text;
+HTML-looking strings are displayed literally. Optional source links must be
+absolute HTTP(S) URLs. Optional author, date, source, and title fields use
+empty strings when omitted. Dates are displayed as supplied.
+
+## Published visitor accounts at the Louvre
+
+The bundled Louvre example includes four short excerpts or summaries from
+three published first-person accounts. They are associated with three named
+rooms in the dated OpenStreetMap snapshot:
+
+| Room | Floor | Account |
+| --- | --- | --- |
+| Salle de la Vénus de Milo | 0 | Jitka Tupa's reflection on incomplete sculptures, explicitly labelled as a summary. |
+| Salle des États | 1 | Short excerpts by `patricia_pham` (UMass Lowell) and Jitka Tupa about seeing the Mona Lisa. |
+| Galerie d'Apollon | 1 | A short excerpt by Michele (Malaysian Meanders), reacting to her children sharing discoveries in the gallery. |
+
+```{r louvre-catalogue}
+louvre_comments <- read.csv(
+  system.file("examples", "real", "louvre-comments.csv", package = "leaflet.indoor"),
+  stringsAsFactors = FALSE,
+  fileEncoding = "UTF-8"
+)
+louvre_comments[c("author", "date", "title")]
+```
+
+```{r louvre-map, out.width='100%'}
+louvre_example <- source(
+  system.file("examples", "louvre-photo-carousel.R", package = "leaflet.indoor"),
+  local = new.env(parent = globalenv())
+)
+louvre_example$value
+```
+
+Click a purple quotation icon to read an account and follow its source link.
+On floor `0`, the Vénus de Milo room also has a photograph. Click the room
+away from its icon to open the photo. Select floor `1` for the Salle des États
+and Galerie d'Apollon accounts. Dates shown are publication dates. These are
+historical personal accounts, not a survey or a description of present-day
+conditions at the museum.
+
+Original sources, checked on 2026-10-06:
+
+- Jitka Tupa (2015), [Visiting My Three Muses at the Louvre](https://flyingoffcourse.wordpress.com/2015/09/24/visiting-my-three-muses-at-the-louvre/).
+- `patricia_pham` (2025), [A Day at the Louvre in Good Company!](https://blogs.uml.edu/paris-spring-2025/2025/03/11/a-day-at-the-louvre-in-good-company/), UMass Lowell.
+- Michele (2013), [Kids and Nintendos at The Louvre](https://malaysianmeanders.blogspot.com/2013/09/nintendos-at-louvre.html).
+
+The installed file `examples/real/COMMENT-SOURCES.md` records the exact
+passages, publication dates, author attribution, and room associations.
+The Louvre's official pages identify
+[Salle des États](https://www.louvre.fr/decouvrir/le-palais/de-la-joconde-aux-noces-de-cana)
+and the [Vénus de Milo room](https://www.louvre.fr/decouvrir/le-palais/un-ideal-de-beaute-grecque).
+
+## Shiny
+
+Clicking a comment icon produces `input$MAPID_indoor_comment_click`, containing
+`id`, `dataset_id`, `level`, `lat`, `lng`, and `comment_count`. Ordinary room
+clicks retain their separate `input$MAPID_indoor_feature_click` event.
+Use `addIndoor()` on a `leafletProxy()` with the same `dataset_id` to replace
+comments or change their icon options; use `setIndoorLevel()` to change the
+floor, or `clearIndoor()` to remove the data set's features and icons.

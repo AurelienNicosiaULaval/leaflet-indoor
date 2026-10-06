@@ -133,11 +133,11 @@ test_that("proxy addIndoor requires explicit local coordinate mode", {
   )
 })
 
-test_that("public API signatures retain the 0.1.0 arguments and add photo support", {
+test_that("public API retains positional arguments and appends photo and comment support", {
   expect_identical(names(formals(addIndoor)), c(
     "map", "data", "level", "dataset_id", "level_order", "initial_level",
     "layerId", "label", "popup", "style", "options", "labelOptions",
-    "popupOptions", "missing_level", "crs", "photos", "photoOptions"
+    "popupOptions", "missing_level", "crs", "photos", "photoOptions", "comments", "commentOptions"
   ))
   expect_identical(names(formals(addIndoorControl)), c(
     "map", "dataset_id", "control_id", "position", "options"

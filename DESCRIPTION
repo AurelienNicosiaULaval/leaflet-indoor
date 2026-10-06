@@ -8,7 +8,8 @@ Description: Adds accessible floor controls and multi-level indoor vector
     GeoJSON, simple feature geometry collections, and optional 'SpatVector'
     objects can be displayed with one active floor per indoor data set. Room
     identifiers can also be associated with portable photo carousels whose
-    images remain paired with plain-text captions.
+    images remain paired with plain-text captions. Optional room comments and
+    attributed testimonials open from customizable, accessible map icons.
 License: MIT + file LICENSE
 URL: https://aureliennicosiaulaval.github.io/leaflet-indoor/,
     https://github.com/AurelienNicosiaULaval/leaflet-indoor

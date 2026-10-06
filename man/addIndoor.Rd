@@ -21,7 +21,9 @@ addIndoor(
   missing_level = c("error", "drop"),
   crs = c("auto", "geographic", "simple"),
   photos = NULL,
-  photoOptions = indoorPhotoOptions()
+  photoOptions = indoorPhotoOptions(),
+  comments = NULL,
+  commentOptions = indoorCommentOptions()
 )
 }
 \arguments{
@@ -66,6 +68,11 @@ a data frame with equivalent \code{layerId}, \code{src}, \code{caption}, and opt
 \code{alt} columns. Catalogue identifiers must match \code{layerId} values.}
 
 \item{photoOptions}{Carousel labels created by \code{\link[=indoorPhotoOptions]{indoorPhotoOptions()}}.}
+
+\item{comments}{Optional catalogue created by \code{\link[=indoorCommentCatalog]{indoorCommentCatalog()}}, or a
+data frame with equivalent columns. Identifiers must match \code{layerId}.}
+
+\item{commentOptions}{Icon and labels created by \code{\link[=indoorCommentOptions]{indoorCommentOptions()}}.}
 }
 \value{
 The input map or proxy, with an indoor method queued.

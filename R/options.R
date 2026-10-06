@@ -141,6 +141,49 @@ indoorPhotoOptions <- function(
   )
 }
 
+#' Options for room comment icons
+#'
+#' @param icon One of `"comment"`, `"quote"`, or `"info"` for bundled vector
+#'   icons, or a short plain-text symbol such as `"\u2605"` or `"\u270e"`.
+#' @param color,background_color Icon foreground and background colors as
+#'   hexadecimal `#RGB` or `#RRGGBB` strings.
+#' @param show Whether to display comment icons.
+#' @param marker_label Accessible action label for a comment icon. The room
+#'   label, when supplied, is appended automatically.
+#' @param popup_label Heading displayed above the room comments.
+#' @param source_label Label for each comment's source link.
+#' @return An object of class `leaflet_indoor_comment_options`.
+#' @export
+#' @examples
+#' indoorCommentOptions(icon = "quote", background_color = "#7c3aed")
+#' indoorCommentOptions(icon = "\u2605", marker_label = "Lire les témoignages",
+#'                      popup_label = "Témoignages", source_label = "Source")
+indoorCommentOptions <- function(icon = "comment", color = "#ffffff",
+                                 background_color = "#7c3aed", show = TRUE,
+                                 marker_label = "Read room comments",
+                                 popup_label = "Room comments",
+                                 source_label = "Read source") {
+  assert_scalar_string(icon, "icon")
+  if (nchar(icon, type = "chars") > 16L) {
+    indoor_abort("`icon` must be a bundled icon name or a short plain-text symbol (at most 16 characters).")
+  }
+  for (name in c("color", "background_color")) {
+    value <- if (name == "color") color else background_color
+    assert_scalar_string(value, name)
+    if (!grepl("^#(?:[[:xdigit:]]{3}|[[:xdigit:]]{6})$", value)) {
+      indoor_abort(sprintf("`%s` must be a hexadecimal #RGB or #RRGGBB color.", name))
+    }
+  }
+  assert_scalar_logical(show, "show")
+  assert_scalar_string(marker_label, "marker_label")
+  assert_scalar_string(popup_label, "popup_label")
+  assert_scalar_string(source_label, "source_label")
+  structure(list(icon = icon, color = color, backgroundColor = background_color,
+                 show = show, markerLabel = marker_label,
+                 popupLabel = popup_label, sourceLabel = source_label),
+            class = "leaflet_indoor_comment_options")
+}
+
 validate_option_list <- function(x, name) {
   if (!is.list(x) || is.null(names(x)) || any(!nzchar(names(x)))) {
     indoor_abort(sprintf("`%s` must be a named list.", name))

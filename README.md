@@ -98,6 +98,45 @@ and five public-domain photographs associated with three rooms on two
 floors. The Wikimedia Commons example includes complete provenance and
 is explicitly not an official visitor or safety plan.
 
+## Room comments and testimonials
+
+Add one catalogue row per comment and attach it to a room's `layerId`.
+Only rooms with comments receive an icon. Click the icon to read comments,
+or click the room to open its usual popup or photo carousel.
+
+```r
+library(leaflet)
+library(leaflet.indoor)
+
+room_comments <- indoorCommentCatalog(
+  layerId = "feature-01",
+  text = "A fictional example of a visitor comment.",
+  author = "Example visitor",
+  title = "Fictional demonstration comment"
+)
+
+leaflet(indoor_demo, options = leafletOptions(
+  crs = leafletCRS("L.CRS.Simple")
+)) |>
+  addIndoor(
+    layerId = ~feature_id,
+    label = ~name,
+    popup = ~description,
+    comments = room_comments,
+    commentOptions = indoorCommentOptions(icon = "quote"),
+    crs = "simple"
+  ) |>
+  addIndoorControl()
+```
+
+Choose `"comment"`, `"quote"`, `"info"`, or a short text symbol with
+`indoorCommentOptions()`. Icons follow the active floor and support Enter,
+Space, and Escape. Optional `author`, `date`, `source`, and `title` fields
+preserve attribution; source links accept HTTP(S) URLs. The
+[room-comments article](https://aureliennicosiaulaval.github.io/leaflet-indoor/articles/room-comments.html)
+extends the Louvre example with four attributed excerpts or summaries from
+three published visitor accounts in three rooms.
+
 ## Shiny
 
 Floor changes made by a user are available as

@@ -71,6 +71,11 @@ Feature clicks produce `input$MAPID_indoor_feature_click` with `id`,
 `dataset_id`, `level`, `lat`, and `lng`. Programmatic floor changes do not emit
 the user-selection event, which prevents reactive feedback loops.
 
+When `comments` are supplied to `addIndoor()`, comment-icon clicks produce
+`input$MAPID_indoor_comment_click` with `id`, `dataset_id`, `level`, `lat`,
+`lng`, and `comment_count`. Comment icons belong to the same floor groups as
+the rooms and are replaced or cleared with their indoor data set.
+
 ## Replacing and clearing data
 
 `addIndoor()` can be called on a proxy with explicit `data`. Reusing a

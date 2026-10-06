@@ -249,6 +249,157 @@
     return root;
   }
 
+  function commentIcon(options) {
+    var badge = document.createElement("span");
+    badge.className = "leaflet-indoor-comment-marker__badge";
+    badge.style.color = options.color || "#ffffff";
+    badge.style.backgroundColor = options.backgroundColor || "#7c3aed";
+    badge.setAttribute("aria-hidden", "true");
+    var paths = {
+      comment: "M4 4h16v12H9l-5 4V4z",
+      quote: "M4 6h6v6H7v5H4V6zm10 0h6v6h-3v5h-3V6z",
+      info: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm-1 4h2v2h-2V7zm0 4h2v6h-2v-6z"
+    };
+    var name = options.icon || "comment";
+    if (Object.prototype.hasOwnProperty.call(paths, name)) {
+      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 24 24");
+      svg.setAttribute("focusable", "false");
+      var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", paths[name]);
+      path.setAttribute("fill", "currentColor");
+      path.setAttribute("fill-rule", "evenodd");
+      svg.appendChild(path);
+      badge.appendChild(svg);
+    } else {
+      badge.textContent = name;
+    }
+    return L.divIcon({
+      className: "leaflet-indoor-comment-marker",
+      html: badge.outerHTML,
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
+      popupAnchor: [0, -20]
+    });
+  }
+
+  function createCommentPopup(dataset, properties) {
+    var options = dataset.commentOptions;
+    var root = L.DomUtil.create("div", "leaflet-indoor-comment-popup");
+    root.setAttribute("role", "region");
+    root.setAttribute("aria-label", options.popupLabel || "Room comments");
+    root.setAttribute("data-indoor-comment-count", String(properties.leafletIndoorComments.length));
+    root.tabIndex = -1;
+    var heading = L.DomUtil.create("h3", "leaflet-indoor-comment-popup__heading", root);
+    heading.textContent = options.popupLabel || "Room comments";
+    if (properties.leafletIndoorLabel) {
+      // Room labels are already encoded or explicitly trusted by the R API.
+      var room = L.DomUtil.create("div", "leaflet-indoor-comment-popup__room", root);
+      room.innerHTML = properties.leafletIndoorLabel;
+    }
+    properties.leafletIndoorComments.forEach(function(comment) {
+      var article = L.DomUtil.create("article", "leaflet-indoor-comment-popup__entry", root);
+      if (comment.title) {
+        var title = L.DomUtil.create("h4", "leaflet-indoor-comment-popup__title", article);
+        title.textContent = comment.title;
+      }
+      var text = L.DomUtil.create("p", "leaflet-indoor-comment-popup__text", article);
+      text.textContent = comment.text;
+      var attribution = [comment.author, comment.date].filter(function(value) { return Boolean(value); });
+      if (attribution.length) {
+        var byline = L.DomUtil.create("div", "leaflet-indoor-comment-popup__byline", article);
+        byline.textContent = attribution.join(" · ");
+      }
+      if (comment.source && /^https?:\/\//i.test(comment.source)) {
+        var link = L.DomUtil.create("a", "leaflet-indoor-comment-popup__source", article);
+        link.href = comment.source;
+        link.textContent = options.sourceLabel || "Read source";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+      }
+    });
+    L.DomEvent.disableClickPropagation(root);
+    L.DomEvent.disableScrollPropagation(root);
+    return root;
+  }
+
+  function commentMarkerForFeature(map, dataset, level, feature) {
+    var properties = feature.properties;
+    var options = dataset.commentOptions;
+    var comments = properties.leafletIndoorComments;
+    var position = properties.leafletIndoorCommentPosition;
+    if (options.show === false || !Array.isArray(comments) || !comments.length || !position) return null;
+    var label = options.markerLabel || "Read room comments";
+    if (properties.leafletIndoorLabel) {
+      var decoded = document.createElement("div");
+      decoded.innerHTML = properties.leafletIndoorLabel;
+      label += ": " + decoded.textContent;
+    }
+    var marker = L.marker([position.lat, position.lng], {
+      icon: commentIcon(options),
+      title: label,
+      keyboard: true,
+      interactive: dataset.options.interactive !== false,
+      bubblingMouseEvents: false
+    });
+    var root = createCommentPopup(dataset, properties);
+    marker.bindPopup(root, mergeOptions({maxWidth: 360, keepInView: true}, dataset.popupOptions));
+    function syncLayout() {
+      root.style.maxHeight = String(Math.max(96, map.getContainer().clientHeight - 130)) + "px";
+      var popup = marker.getPopup();
+      popup.options.maxWidth = Math.min(dataset.popupOptions.maxWidth || 360,
+        Math.max(100, map.getContainer().clientWidth - 80));
+      updatePopupLayout(marker);
+    }
+    marker.on("add", function() {
+      var element = marker.getElement();
+      element.setAttribute("role", "button");
+      element.setAttribute("aria-label", label);
+      element.setAttribute("aria-expanded", "false");
+      element.setAttribute("data-indoor-comment-id", properties.leafletIndoorLayerId);
+      if (dataset.options.interactive === false) element.tabIndex = -1;
+      L.DomEvent.on(element, "keydown", function(event) {
+        if (event.key === " " && dataset.options.interactive !== false) {
+          L.DomEvent.stop(event);
+          marker.fire("click", {latlng: marker.getLatLng()});
+        }
+      });
+    });
+    marker.on("popupopen", function() {
+      marker.getElement().setAttribute("aria-expanded", "true");
+      syncLayout();
+      map.on("resize", syncLayout);
+      root.focus({preventScroll: true});
+    });
+    marker.on("popupclose", function() {
+      map.off("resize", syncLayout);
+      var element = marker.getElement();
+      if (element) {
+        element.setAttribute("aria-expanded", "false");
+        if (element.isConnected && root.contains(document.activeElement)) element.focus({preventScroll: true});
+      }
+    });
+    L.DomEvent.on(root, "keydown", function(event) {
+      if (event.key === "Escape") {
+        L.DomEvent.stop(event);
+        var element = marker.getElement();
+        marker.closePopup();
+        if (element && element.isConnected) element.focus({preventScroll: true});
+      }
+    });
+    marker.on("click", function() {
+      sendShinyInput(map, "_indoor_comment_click", {
+        id: properties.leafletIndoorLayerId,
+        dataset_id: dataset.id,
+        level: level,
+        lat: position.lat,
+        lng: position.lng,
+        comment_count: comments.length
+      });
+    });
+    return marker;
+  }
+
   function layerForFeature(map, dataset, level, feature) {
     var props = feature.properties || {};
     return L.geoJSON(feature, {
@@ -323,6 +474,7 @@
       labelOptions: payload.labelOptions || {},
       popupOptions: payload.popupOptions || {},
       photoOptions: payload.photoOptions || {},
+      commentOptions: payload.commentOptions || {},
       closePhotoDialog: null,
       crs: payload.crs
     };
@@ -337,6 +489,8 @@
       levels.forEach(function(level) {
         if (dataset.groups[level]) {
           dataset.groups[level].addLayer(layerForFeature(map, dataset, level, feature));
+          var commentMarker = commentMarkerForFeature(map, dataset, level, feature);
+          if (commentMarker) dataset.groups[level].addLayer(commentMarker);
         }
       });
     });

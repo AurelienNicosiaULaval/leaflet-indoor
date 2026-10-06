@@ -3,6 +3,8 @@
 export(addIndoor)
 export(addIndoorControl)
 export(clearIndoor)
+export(indoorCommentCatalog)
+export(indoorCommentOptions)
 export(indoorControlOptions)
 export(indoorOptions)
 export(indoorPhotoCatalog)
