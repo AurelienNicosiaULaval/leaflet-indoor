@@ -115,12 +115,14 @@ for (const mobile of [false, true]) {
       .toHaveAttribute("href", "https://flyingoffcourse.wordpress.com/2015/09/24/visiting-my-three-muses-at-the-louvre/");
     await expect(map.locator(".leaflet-indoor-photo-popup")).toHaveCount(0);
     await page.keyboard.press("Escape");
+    await expect(accounts).toHaveCount(0);
     await map.locator('[data-indoor-level="1"]').click();
     await expect(map.locator(".leaflet-indoor-comment-marker")).toHaveCount(2);
     await map.locator('[data-indoor-comment-id="osm-way-492611500"]').click();
     await expect(accounts).toHaveAttribute("data-indoor-comment-count", "2");
     await expect(accounts).toContainText("patricia_pham (UMass Lowell)");
     await page.keyboard.press("Escape");
+    await expect(accounts).toHaveCount(0);
     await map.locator('[data-indoor-level="-2"]').click();
     await expect(map.locator(".leaflet-indoor-comment-marker")).toHaveCount(0);
     expect(errors).toEqual([]);
