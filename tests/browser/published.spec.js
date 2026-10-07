@@ -84,3 +84,47 @@ test("published pkgdown site and interactive article are reachable", async ({ pa
   expect(mobileLayout.documentWidth).toBeLessThanOrEqual(mobileLayout.viewportWidth);
   expect(errors).toEqual([]);
 });
+
+for (const mobile of [false, true]) {
+  test(`published room accounts keep room photos separately clickable${mobile ? " on mobile" : " on desktop"}`, async ({ page }) => {
+    const errors = [];
+    page.on("pageerror", error => errors.push(error.stack || error.message));
+    if (mobile) await page.setViewportSize({ width: 390, height: 700 });
+    // This scenario verifies the published widget independently of tile availability.
+    await page.route("https://*.tile.openstreetmap.org/**", route => route.fulfill({ status: 200, body: "" }));
+    const base = process.env.PUBLISHED_BASE_URL.replace(/\/$/, "");
+    const reference = await page.goto(base + "/reference/indoorCommentOptions.html");
+    expect(reference.status()).toBe(200);
+    await expect(page.locator("main")).toContainText('placement = "edge"');
+    const article = await page.goto(base + "/articles/room-comments.html");
+    expect(article.status()).toBe(200);
+    await expect(page.getByRole("heading", { name: "Room comments and visitor accounts", exact: true })).toBeVisible();
+    const map = page.locator(".leaflet.html-widget").last();
+    await map.scrollIntoViewIfNeeded();
+    const venus = map.locator('[data-indoor-comment-id="osm-way-453817508"]');
+    await expect(venus).toBeVisible();
+    await expect(map.locator(".leaflet-indoor-comment-connector")).toHaveCount(1);
+    await map.locator(".leaflet-indoor-feature-53").click();
+    await expect(map.locator('[data-indoor-photo-count="1"]')).toBeVisible();
+    await expect(map.locator(".leaflet-indoor-comment-popup")).toHaveCount(0);
+    await map.locator(".leaflet-popup-close-button").click();
+    await venus.click();
+    const accounts = map.getByRole("region", { name: "Visitor accounts" });
+    await expect(accounts).toContainText("Jitka Tupa");
+    await expect(accounts.getByRole("link", { name: "Read the original account" }))
+      .toHaveAttribute("href", "https://flyingoffcourse.wordpress.com/2015/09/24/visiting-my-three-muses-at-the-louvre/");
+    await expect(map.locator(".leaflet-indoor-photo-popup")).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(accounts).toHaveCount(0);
+    await map.locator('[data-indoor-level="1"]').click();
+    await expect(map.locator(".leaflet-indoor-comment-marker")).toHaveCount(2);
+    await map.locator('[data-indoor-comment-id="osm-way-492611500"]').click();
+    await expect(accounts).toHaveAttribute("data-indoor-comment-count", "2");
+    await expect(accounts).toContainText("patricia_pham (UMass Lowell)");
+    await page.keyboard.press("Escape");
+    await expect(accounts).toHaveCount(0);
+    await map.locator('[data-indoor-level="-2"]').click();
+    await expect(map.locator(".leaflet-indoor-comment-marker")).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+}

@@ -1,4 +1,4 @@
-# Real-world Louvre example using bundled room data and photographs.
+# Real-world Louvre example using bundled rooms, photographs, and visitor accounts.
 library(leaflet)
 library(leaflet.indoor)
 library(sf)
@@ -59,6 +59,12 @@ louvre_photos <- indoorPhotoCatalog(
   )
 )
 
+louvre_comments <- read.csv(
+  system.file("examples", "real", "louvre-comments.csv", package = "leaflet.indoor"),
+  stringsAsFactors = FALSE,
+  fileEncoding = "UTF-8"
+)
+
 photo_room_names <- c(
   "Salle des Caryatides",
   "Salle de la Vénus de Milo",
@@ -77,6 +83,13 @@ leaflet(louvre_rooms, height = 600) |>
     initial_level = "0",
     layerId = ~feature_id,
     photos = louvre_photos,
+    comments = louvre_comments,
+    commentOptions = indoorCommentOptions(
+      icon = "quote",
+      marker_label = "Read visitor accounts",
+      popup_label = "Visitor accounts",
+      source_label = "Read the original account"
+    ),
     label = ~name,
     popup = ~paste0(name, ". Level ", level, ". ", description),
     style = list(

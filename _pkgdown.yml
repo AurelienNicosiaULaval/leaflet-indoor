@@ -27,6 +27,8 @@ navbar:
         href: articles/shiny.html
       - text: Real-world photo example
         href: articles/photo-carousels.html
+      - text: Room comments and visitor accounts
+        href: articles/room-comments.html
     github:
       icon: fab fa-github
       href: https://github.com/AurelienNicosiaULaval/leaflet-indoor
@@ -46,9 +48,13 @@ reference:
   - indoorOptions
   - indoorControlOptions
   - indoorPhotoOptions
+  - indoorCommentOptions
 - title: Room photos
   contents:
   - indoorPhotoCatalog
+- title: Room comments
+  contents:
+  - indoorCommentCatalog
 - title: Example data
   contents:
   - indoor_demo
@@ -64,3 +70,4 @@ articles:
   contents:
   - shiny
   - photo-carousels
+  - room-comments

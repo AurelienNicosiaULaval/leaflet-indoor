@@ -249,6 +249,219 @@
     return root;
   }
 
+  function commentIcon(options) {
+    var targetSize = Math.max(44, (options.size || 36) + 8);
+    var badge = document.createElement("span");
+    badge.className = "leaflet-indoor-comment-marker__badge";
+    badge.style.color = options.color || "#ffffff";
+    badge.style.backgroundColor = options.backgroundColor || "#7c3aed";
+    badge.setAttribute("aria-hidden", "true");
+    var paths = {
+      comment: "M4 4h16v12H9l-5 4V4z",
+      quote: "M4 6h6v6H7v5H4V6zm10 0h6v6h-3v5h-3V6z",
+      info: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm-1 4h2v2h-2V7zm0 4h2v6h-2v-6z"
+    };
+    var name = options.icon || "comment";
+    if (Object.prototype.hasOwnProperty.call(paths, name)) {
+      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 24 24");
+      svg.setAttribute("focusable", "false");
+      var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", paths[name]);
+      path.setAttribute("fill", "currentColor");
+      path.setAttribute("fill-rule", "evenodd");
+      svg.appendChild(path);
+      badge.appendChild(svg);
+    } else {
+      badge.textContent = name;
+    }
+    return L.divIcon({
+      className: "leaflet-indoor-comment-marker",
+      html: badge.outerHTML,
+      iconSize: [targetSize, targetSize],
+      iconAnchor: [targetSize / 2, targetSize / 2],
+      popupAnchor: [0, -20]
+    });
+  }
+
+  function createCommentPopup(dataset, properties) {
+    var options = dataset.commentOptions;
+    var root = L.DomUtil.create("div", "leaflet-indoor-comment-popup");
+    root.setAttribute("role", "region");
+    root.setAttribute("aria-label", options.popupLabel || "Room comments");
+    root.setAttribute("data-indoor-comment-count", String(properties.leafletIndoorComments.length));
+    root.tabIndex = -1;
+    var heading = L.DomUtil.create("h3", "leaflet-indoor-comment-popup__heading", root);
+    heading.textContent = options.popupLabel || "Room comments";
+    if (properties.leafletIndoorLabel) {
+      // Room labels are already encoded or explicitly trusted by the R API.
+      var room = L.DomUtil.create("div", "leaflet-indoor-comment-popup__room", root);
+      room.innerHTML = properties.leafletIndoorLabel;
+    }
+    properties.leafletIndoorComments.forEach(function(comment) {
+      var article = L.DomUtil.create("article", "leaflet-indoor-comment-popup__entry", root);
+      if (comment.title) {
+        var title = L.DomUtil.create("h4", "leaflet-indoor-comment-popup__title", article);
+        title.textContent = comment.title;
+      }
+      var text = L.DomUtil.create("p", "leaflet-indoor-comment-popup__text", article);
+      text.textContent = comment.text;
+      var attribution = [comment.author, comment.date].filter(function(value) { return Boolean(value); });
+      if (attribution.length) {
+        var byline = L.DomUtil.create("div", "leaflet-indoor-comment-popup__byline", article);
+        byline.textContent = attribution.join(" · ");
+      }
+      if (comment.source && /^https?:\/\//i.test(comment.source)) {
+        var link = L.DomUtil.create("a", "leaflet-indoor-comment-popup__source", article);
+        link.href = comment.source;
+        link.textContent = options.sourceLabel || "Read source";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+      }
+    });
+    L.DomEvent.disableClickPropagation(root);
+    L.DomEvent.disableScrollPropagation(root);
+    return root;
+  }
+
+  function commentMarkerForFeature(map, dataset, level, feature, roomLayer) {
+    var properties = feature.properties;
+    var options = dataset.commentOptions;
+    var comments = properties.leafletIndoorComments;
+    var position = properties.leafletIndoorCommentPosition;
+    if (options.show === false || !Array.isArray(comments) || !comments.length || !position) return null;
+    var label = options.markerLabel || "Read room comments";
+    if (properties.leafletIndoorLabel) {
+      var decoded = document.createElement("div");
+      decoded.innerHTML = properties.leafletIndoorLabel;
+      label += ": " + decoded.textContent;
+    }
+    var useEdge = options.placement !== "center";
+    var anchor = useEdge && position.edge ? position.edge : position;
+    var marker = L.marker([anchor.lat, anchor.lng], {
+      icon: commentIcon(options),
+      title: label,
+      keyboard: true,
+      interactive: dataset.options.interactive !== false,
+      bubblingMouseEvents: false
+    });
+    var connector = useEdge ? L.polyline([[anchor.lat, anchor.lng], [anchor.lat, anchor.lng]], {
+      color: options.backgroundColor || "#7c3aed", weight: 1.5, opacity: 0.85,
+      interactive: false, className: "leaflet-indoor-comment-connector"
+    }) : null;
+    if (connector) dataset.groups[level].addLayer(connector);
+    var root = createCommentPopup(dataset, properties);
+    marker.bindPopup(root, mergeOptions({maxWidth: 360, keepInView: true}, dataset.popupOptions));
+    function syncIconSize() {
+      var element = marker.getElement();
+      if (!element) return;
+      var size = options.size || 36;
+      if (options.fitToRoom !== false && !/^(Multi)?Point$/.test(feature.geometry.type)) {
+        var bounds = roomLayer.getBounds();
+        if (bounds.isValid() && bounds.getEast() !== bounds.getWest() &&
+            bounds.getNorth() !== bounds.getSouth() && typeof map.getZoom() === "number") {
+          // Project without rounding so small rooms keep shrinking at distant zooms.
+          var northwest = map.project(bounds.getNorthWest(), map.getZoom());
+          var southeast = map.project(bounds.getSouthEast(), map.getZoom());
+          var roomSize = Math.min(Math.abs(southeast.x - northwest.x),
+            Math.abs(southeast.y - northwest.y));
+          size = Math.max(options.minSize || 12, Math.min(size, roomSize * 0.75));
+        }
+      }
+      var badge = element.querySelector(".leaflet-indoor-comment-marker__badge");
+      badge.style.width = String(size) + "px";
+      badge.style.height = String(size) + "px";
+      badge.style.fontSize = String(size * 0.6) + "px";
+      badge.style.borderWidth = String(Math.max(1, size / 18)) + "px";
+      var offsetX = 0;
+      var offsetY = 0;
+      var halfTarget = marker.options.icon.options.iconSize[0] / 2;
+      if (useEdge && typeof map.getZoom() === "number") {
+        var edgePoint = map.project([anchor.lat, anchor.lng], map.getZoom());
+        var roomPoint = map.project([position.lat, position.lng], map.getZoom());
+        var direction = edgePoint.subtract(roomPoint);
+        var distance = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
+        var unitX = distance > 0 ? direction.x / distance : Math.SQRT1_2;
+        var unitY = distance > 0 ? direction.y / distance : -Math.SQRT1_2;
+        // Move the whole clickable square beyond the edge, including its
+        // transparent margins. The room reference point remains unobstructed.
+        var offset = halfTarget * (Math.abs(unitX) + Math.abs(unitY)) + 4;
+        offsetX = unitX * offset;
+        offsetY = unitY * offset;
+        var lineEnd = edgePoint.add(L.point(unitX * (offset - size / 2),
+          unitY * (offset - size / 2)));
+        connector.setLatLngs([[anchor.lat, anchor.lng], map.unproject(lineEnd, map.getZoom())]);
+      }
+      marker.options.icon.options.iconAnchor = [halfTarget - offsetX, halfTarget - offsetY];
+      element.style.marginLeft = String(offsetX - halfTarget) + "px";
+      element.style.marginTop = String(offsetY - halfTarget) + "px";
+      // Keep the pointer of an open popup attached to the visual badge.
+      // Leaflet rounds pan distances to whole pixels. A fractional popup anchor
+      // can repeatedly request a subpixel pan when keepInView is enabled.
+      marker.options.icon.options.popupAnchor = [Math.round(offsetX), Math.round(offsetY - size / 2)];
+      if (marker.isPopupOpen()) updatePopupLayout(marker);
+    }
+    function syncLayout() {
+      root.style.maxHeight = String(Math.max(96, map.getContainer().clientHeight - 130)) + "px";
+      var popup = marker.getPopup();
+      popup.options.maxWidth = Math.min(dataset.popupOptions.maxWidth || 360,
+        Math.max(100, map.getContainer().clientWidth - 80));
+      updatePopupLayout(marker);
+    }
+    marker.on("add", function() {
+      var element = marker.getElement();
+      element.setAttribute("role", "button");
+      element.setAttribute("aria-label", label);
+      element.setAttribute("aria-expanded", "false");
+      element.setAttribute("data-indoor-comment-id", properties.leafletIndoorLayerId);
+      syncIconSize();
+      map.on("zoomend resize", syncIconSize);
+      if (dataset.options.interactive === false) element.tabIndex = -1;
+      L.DomEvent.on(element, "keydown", function(event) {
+        if (event.key === " " && dataset.options.interactive !== false) {
+          L.DomEvent.stop(event);
+          marker.fire("click", {latlng: marker.getLatLng()});
+        }
+      });
+    });
+    marker.on("remove", function() {
+      map.off("zoomend resize", syncIconSize);
+    });
+    marker.on("popupopen", function() {
+      marker.getElement().setAttribute("aria-expanded", "true");
+      syncLayout();
+      map.on("resize", syncLayout);
+      root.focus({preventScroll: true});
+    });
+    marker.on("popupclose", function() {
+      map.off("resize", syncLayout);
+      var element = marker.getElement();
+      if (element) {
+        element.setAttribute("aria-expanded", "false");
+        if (element.isConnected && root.contains(document.activeElement)) element.focus({preventScroll: true});
+      }
+    });
+    L.DomEvent.on(root, "keydown", function(event) {
+      if (event.key === "Escape") {
+        L.DomEvent.stop(event);
+        var element = marker.getElement();
+        marker.closePopup();
+        if (element && element.isConnected) element.focus({preventScroll: true});
+      }
+    });
+    marker.on("click", function() {
+      sendShinyInput(map, "_indoor_comment_click", {
+        id: properties.leafletIndoorLayerId,
+        dataset_id: dataset.id,
+        level: level,
+        lat: position.lat,
+        lng: position.lng,
+        comment_count: comments.length
+      });
+    });
+    return marker;
+  }
+
   function layerForFeature(map, dataset, level, feature) {
     var props = feature.properties || {};
     return L.geoJSON(feature, {
@@ -323,9 +536,12 @@
       labelOptions: payload.labelOptions || {},
       popupOptions: payload.popupOptions || {},
       photoOptions: payload.photoOptions || {},
+      commentOptions: payload.commentOptions || {},
       closePhotoDialog: null,
       crs: payload.crs
     };
+    // htmlwidgets serializes a single floor name as a scalar string.
+    if (!Array.isArray(dataset.levels)) dataset.levels = [dataset.levels];
     dataset.levels.forEach(function(level) {
       dataset.groups[level] = L.featureGroup();
     });
@@ -336,7 +552,10 @@
       if (!Array.isArray(levels)) levels = [levels];
       levels.forEach(function(level) {
         if (dataset.groups[level]) {
-          dataset.groups[level].addLayer(layerForFeature(map, dataset, level, feature));
+          var roomLayer = layerForFeature(map, dataset, level, feature);
+          dataset.groups[level].addLayer(roomLayer);
+          var commentMarker = commentMarkerForFeature(map, dataset, level, feature, roomLayer);
+          if (commentMarker) dataset.groups[level].addLayer(commentMarker);
         }
       });
     });

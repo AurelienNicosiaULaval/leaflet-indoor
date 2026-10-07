@@ -1,3 +1,81 @@
+.leaflet-indoor-comment-marker {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.leaflet-indoor-comment-marker__badge {
+  align-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  display: flex;
+  font: 22px/1 Arial, sans-serif;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.leaflet-indoor-comment-marker__badge svg {
+  height: 60%;
+  width: 60%;
+  flex-shrink: 0;
+}
+
+.leaflet-indoor-comment-marker:focus-visible {
+  border-radius: 50%;
+  outline: 3px solid #ffbf47;
+  outline-offset: 1px;
+}
+
+.leaflet-indoor-comment-popup {
+  box-sizing: border-box;
+  color: #1f2933;
+  font: 14px/1.5 Arial, sans-serif;
+  max-width: min(22rem, calc(100vw - 6rem));
+  overflow: auto;
+  overflow-wrap: anywhere;
+  overscroll-behavior: contain;
+  padding: 0.1rem;
+}
+
+.leaflet-indoor-comment-popup__heading {
+  font-size: 1.05rem;
+  margin: 0 0 0.25rem;
+}
+
+.leaflet-indoor-comment-popup__room,
+.leaflet-indoor-comment-popup__byline {
+  color: #52606d;
+  font-size: 0.85rem;
+}
+
+.leaflet-indoor-comment-popup__entry {
+  border-top: 1px solid #dce3eb;
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+}
+
+.leaflet-indoor-comment-popup__title {
+  font-size: 0.9rem;
+  margin: 0 0 0.3rem;
+}
+
+.leaflet-container .leaflet-indoor-comment-popup__text {
+  margin: 0 0 0.5rem;
+  white-space: pre-wrap;
+}
+
+.leaflet-indoor-comment-popup__source {
+  display: inline-block;
+  line-height: 44px;
+}
+
 .leaflet-indoor-control {
   background: #fff;
   border: 0;

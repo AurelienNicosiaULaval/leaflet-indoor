@@ -141,6 +141,75 @@ indoorPhotoOptions <- function(
   )
 }
 
+#' Options for room comment icons
+#'
+#' @param icon One of `"comment"`, `"quote"`, or `"info"` for bundled vector
+#'   icons, or a short plain-text symbol such as `"\u2605"` or `"\u270e"`.
+#' @param color,background_color Icon foreground and background colors as
+#'   hexadecimal `#RGB` or `#RRGGBB` strings.
+#' @param show Whether to display comment icons.
+#' @param marker_label Accessible action label for a comment icon. The room
+#'   label, when supplied, is appended automatically.
+#' @param popup_label Heading displayed above the room comments.
+#' @param source_label Label for each comment's source link.
+#' @param size Maximum visual badge diameter in CSS pixels.
+#' @param min_size Minimum visual badge diameter when fitting to a room.
+#' @param fit_to_room Scale the badge and its icon with the room's projected
+#'   size as the map zoom changes. Point features retain `size`. The clickable
+#'   target remains at least 44 pixels for touch and keyboard access.
+#' @param placement `"edge"` places the icon just outside the room's exterior
+#'   boundary, with a short connector, leaving the room available for clicks.
+#'   `"center"` places it at the interior reference point. Point and line
+#'   features without an exterior ring use an offset from their reference point.
+#' @return An object of class `leaflet_indoor_comment_options`.
+#' @export
+#' @examples
+#' indoorCommentOptions(icon = "quote", background_color = "#7c3aed")
+#' indoorCommentOptions(icon = "\u2605", marker_label = "Lire les témoignages",
+#'                      popup_label = "Témoignages", source_label = "Source")
+indoorCommentOptions <- function(icon = "comment", color = "#ffffff",
+                                 background_color = "#7c3aed", show = TRUE,
+                                 marker_label = "Read room comments",
+                                 popup_label = "Room comments",
+                                 source_label = "Read source", size = 36,
+                                 min_size = 12, fit_to_room = TRUE,
+                                 placement = "edge") {
+  assert_scalar_string(icon, "icon")
+  if (nchar(icon, type = "chars") > 16L) {
+    indoor_abort("`icon` must be a bundled icon name or a short plain-text symbol (at most 16 characters).")
+  }
+  for (name in c("color", "background_color")) {
+    value <- if (name == "color") color else background_color
+    assert_scalar_string(value, name)
+    if (!grepl("^#(?:[[:xdigit:]]{3}|[[:xdigit:]]{6})$", value)) {
+      indoor_abort(sprintf("`%s` must be a hexadecimal #RGB or #RRGGBB color.", name))
+    }
+  }
+  assert_scalar_logical(show, "show")
+  assert_scalar_string(marker_label, "marker_label")
+  assert_scalar_string(popup_label, "popup_label")
+  assert_scalar_string(source_label, "source_label")
+  for (name in c("size", "min_size")) {
+    value <- if (name == "size") size else min_size
+    if (!is.numeric(value) || length(value) != 1L || is.na(value) ||
+        !is.finite(value) || value < 8) {
+      indoor_abort(sprintf("`%s` must be one finite number greater than or equal to 8.", name))
+    }
+  }
+  if (min_size > size) indoor_abort("`min_size` must not exceed `size`.")
+  assert_scalar_logical(fit_to_room, "fit_to_room")
+  assert_scalar_string(placement, "placement")
+  if (!placement %in% c("edge", "center")) {
+    indoor_abort("`placement` must be \"edge\" or \"center\".")
+  }
+  structure(list(icon = icon, color = color, backgroundColor = background_color,
+                 show = show, markerLabel = marker_label,
+                 popupLabel = popup_label, sourceLabel = source_label,
+                 size = unname(size), minSize = unname(min_size), fitToRoom = fit_to_room,
+                 placement = placement),
+            class = "leaflet_indoor_comment_options")
+}
+
 validate_option_list <- function(x, name) {
   if (!is.list(x) || is.null(names(x)) || any(!nzchar(names(x)))) {
     indoor_abort(sprintf("`%s` must be a named list.", name))

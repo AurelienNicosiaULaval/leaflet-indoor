@@ -141,6 +141,15 @@ leaflet(louvre_rooms, height = 600) |>
     initial_level = "0",
     layerId = ~feature_id,
     photos = louvre_photos,
+    comments = read.csv(
+      system.file("examples", "real", "louvre-comments.csv", package = "leaflet.indoor"),
+      stringsAsFactors = FALSE,
+      fileEncoding = "UTF-8"
+    ),
+    commentOptions = indoorCommentOptions(
+      icon = "quote", marker_label = "Read visitor accounts",
+      popup_label = "Visitor accounts", source_label = "Read the original account"
+    ),
     label = ~name,
     popup = ~paste0(name, ". Level ", level, ". ", description),
     style = list(
@@ -161,6 +170,12 @@ This rendered map exercises the geographic path of `addIndoor()`: real
 longitude and latitude coordinates are displayed over live OpenStreetMap
 tiles, exactly one floor is active, and photographs are joined through the
 same stable identifiers used by the vector features.
+
+Purple quotation icons open published visitor accounts for the Vénus de Milo,
+the Salle des États, and the Galerie d'Apollon. Each entry includes attribution,
+its publication date, and a source link. Click a room away from its icon to
+open its ordinary popup or photographs. See the
+[room-comments article](room-comments.html) for provenance and customization.
 
 ## Data and image provenance
 

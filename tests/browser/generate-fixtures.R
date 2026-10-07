@@ -243,6 +243,58 @@ rmarkdown::render(
   envir = new.env(parent = globalenv())
 )
 
+# Comment fixtures include a photo room, an upper-floor room, and shared stairs.
+room_comments <- indoorCommentCatalog(
+  layerId = c("feature-01", "feature-01", "feature-06", "feature-04"),
+  text = c(
+    "<img src=x onerror=alert(1)> & a plain-text comment",
+    paste(rep("A longer fictional account that remains readable when the popup scrolls.", 20), collapse = " "),
+    "A fictional upstairs account.",
+    "A fictional account shared across three floors."
+  ),
+  author = c("Example visitor A", "Example visitor B", "Example visitor C", "Example visitor D"),
+  date = "2026-10-06",
+  source = "https://example.org/visitor-account",
+  title = "Fictional demonstration comment"
+)
+comment_map <- leaflet(indoor_demo, height = 520, elementId = "comment-map",
+  options = leafletOptions(crs = leafletCRS("L.CRS.Simple"), minZoom = -2)) |>
+  addIndoor(layerId = ~feature_id, label = ~name, popup = ~description,
+    photos = photo_catalogue, comments = room_comments,
+    commentOptions = indoorCommentOptions(icon = "\u2605", marker_label = "Lire les témoignages",
+      popup_label = "Témoignages", source_label = "Lire la source"),
+    style = list(fillColor = ~fill), crs = "simple") |>
+  addIndoorControl(position = "bottomright")
+saveWidget(comment_map, file.path(output_dir, "comments.html"), selfcontained = FALSE,
+  title = "Indoor room comments")
+
+fixed_comment_map <- leaflet(indoor_demo, height = 520, elementId = "fixed-comment-map",
+  options = leafletOptions(crs = leafletCRS("L.CRS.Simple"), minZoom = -2)) |>
+  addIndoor(layerId = ~feature_id, comments = room_comments,
+    commentOptions = indoorCommentOptions(size = 28, fit_to_room = FALSE, placement = "center"),
+    crs = "simple") |>
+  addIndoorControl()
+saveWidget(fixed_comment_map, file.path(output_dir, "comments-fixed.html"),
+  selfcontained = FALSE, title = "Fixed comment icon size")
+
+point_features <- indoor_demo[c(5, 10), ]
+point_features$level <- "0"
+point_comment_map <- leaflet(point_features, height = 520, elementId = "point-comment-map",
+  options = leafletOptions(crs = leafletCRS("L.CRS.Simple"), minZoom = -2)) |>
+  addIndoor(layerId = ~feature_id,
+    comments = indoorCommentCatalog(point_features$feature_id, "Point feature comment"),
+    crs = "simple")
+saveWidget(point_comment_map, file.path(output_dir, "comments-points.html"),
+  selfcontained = FALSE, title = "Point feature comments")
+
+louvre_comments_example <- source(
+  system.file("examples", "louvre-photo-carousel.R", package = "leaflet.indoor"),
+  local = new.env(parent = globalenv())
+)
+saveWidget(louvre_comments_example$value,
+  file.path(output_dir, "louvre-comments.html"), selfcontained = FALSE,
+  title = "Louvre rooms and visitor accounts")
+
 quarto::quarto_render(
   file.path(package_root, "inst", "examples", "quarto", "indoor-map.qmd"),
   output_file = "quarto-example.html",

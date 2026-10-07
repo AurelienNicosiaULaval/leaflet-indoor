@@ -26,6 +26,9 @@
 #' @param options Options created by [indoorOptions()].
 #' @param labelOptions,popupOptions Leaflet tooltip and popup options.
 #' @param photoOptions Carousel labels created by [indoorPhotoOptions()].
+#' @param comments Optional catalogue created by [indoorCommentCatalog()], or a
+#'   data frame with equivalent columns. Identifiers must match `layerId`.
+#' @param commentOptions Icon and labels created by [indoorCommentOptions()].
 #' @param missing_level Either `"error"` or `"drop"`.
 #' @param crs Coordinate interpretation. `"auto"` detects the map CRS for
 #'   ordinary maps. Use `"simple"` explicitly for local coordinates sent to a
@@ -68,7 +71,9 @@ addIndoor <- function(
   missing_level = c("error", "drop"),
   crs = c("auto", "geographic", "simple"),
   photos = NULL,
-  photoOptions = indoorPhotoOptions()
+  photoOptions = indoorPhotoOptions(),
+  comments = NULL,
+  commentOptions = indoorCommentOptions()
 ) {
   level_missing <- missing(level)
   assert_map(map)
@@ -83,6 +88,9 @@ addIndoor <- function(
   if (!inherits(photoOptions, "leaflet_indoor_photo_options")) {
     indoor_abort("`photoOptions` must be created by `indoorPhotoOptions()`.")
   }
+  if (!inherits(commentOptions, "leaflet_indoor_comment_options")) {
+    indoor_abort("`commentOptions` must be created by `indoorCommentOptions()`.")
+  }
 
   normalized <- normalize_indoor_data(
     data = data,
@@ -96,7 +104,7 @@ addIndoor <- function(
   )
   payload <- build_indoor_payload(
     normalized, dataset_id, layerId, photos, label, popup, style,
-    options, labelOptions, popupOptions, photoOptions
+    options, labelOptions, popupOptions, photoOptions, comments, commentOptions
   )
 
   map <- register_indoor_dependency(map)
