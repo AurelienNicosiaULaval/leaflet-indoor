@@ -14,15 +14,15 @@ floor control to maps created with the R package
 displays exactly one active floor while remaining independent from other
 maps and indoor data sets on the same page.
 
-Version 0.1.0 is experimental. The public API is tested for regression,
+Version 0.2.0 is experimental. The public API is tested for regression,
 but feedback from additional indoor data models is welcome.
 
 ## Installation
 
-Install the development release from GitHub:
+Install version 0.2.0 from GitHub:
 
 ``` r
-pak::pak("AurelienNicosiaULaval/leaflet-indoor")
+pak::pak("AurelienNicosiaULaval/leaflet-indoor@v0.2.0")
 ```
 
 Git users can clone with SSH:
@@ -100,11 +100,11 @@ is explicitly not an official visitor or safety plan.
 
 ## Room comments and testimonials
 
-Add one catalogue row per comment and attach it to a room's `layerId`.
-Only rooms with comments receive an icon. Click the icon to read comments,
-or click the room to open its usual popup or photo carousel.
+Add one catalogue row per comment and attach it to a room’s `layerId`.
+Only rooms with comments receive an icon. Click the icon to read
+comments, or click the room to open its usual popup or photo carousel.
 
-```r
+``` r
 library(leaflet)
 library(leaflet.indoor)
 
@@ -130,12 +130,13 @@ leaflet(indoor_demo, options = leafletOptions(
 ```
 
 Choose `"comment"`, `"quote"`, `"info"`, or a short text symbol with
-`indoorCommentOptions()`. Icons follow the active floor and support Enter,
-Space, and Escape. Optional `author`, `date`, `source`, and `title` fields
-preserve attribution; source links accept HTTP(S) URLs. The
-[room-comments article](https://aureliennicosiaulaval.github.io/leaflet-indoor/articles/room-comments.html)
-extends the Louvre example with four attributed excerpts or summaries from
-three published visitor accounts in three rooms.
+`indoorCommentOptions()`. Icons follow the active floor and support
+Enter, Space, and Escape. Optional `author`, `date`, `source`, and
+`title` fields preserve attribution; source links accept HTTP(S) URLs.
+The [room-comments
+article](https://aureliennicosiaulaval.github.io/leaflet-indoor/articles/room-comments.html)
+extends the Louvre example with four attributed excerpts or summaries
+from three published visitor accounts in three rooms.
 
 ## Shiny
 

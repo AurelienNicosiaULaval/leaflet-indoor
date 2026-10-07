@@ -16,15 +16,15 @@ control to maps created with the R package [`leaflet`](https://rstudio.github.io
 Each indoor data set displays exactly one active floor while remaining
 independent from other maps and indoor data sets on the same page.
 
-Version 0.1.0 is experimental. The public API is tested for regression, but
+Version 0.2.0 is experimental. The public API is tested for regression, but
 feedback from additional indoor data models is welcome.
 
 ## Installation
 
-Install the development release from GitHub:
+Install version 0.2.0 from GitHub:
 
 ```r
-pak::pak("AurelienNicosiaULaval/leaflet-indoor")
+pak::pak("AurelienNicosiaULaval/leaflet-indoor@v0.2.0")
 ```
 
 Git users can clone with SSH:

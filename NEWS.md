@@ -1,4 +1,4 @@
-# leaflet.indoor (development version)
+# leaflet.indoor 0.2.0
 
 * Comment icons now sit outside the room's exterior edge, with a short
   connector, leaving the room available for its normal popup or photos.
@@ -8,6 +8,8 @@
   the room's projected size within configurable minimum and maximum diameters.
 * Single-floor datasets render correctly when their floor name is serialized
   as a scalar string by htmlwidgets.
+* Comment popup anchors use whole pixels to prevent recursive automatic
+  panning at distant zoom levels with Leaflet 1.3.1.
 
 * Adds optional room comments and attributed testimonials through
   `indoorCommentCatalog()`, with customizable icons and translated labels from

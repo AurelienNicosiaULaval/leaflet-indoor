@@ -2,7 +2,7 @@ const { test, expect } = require("@playwright/test");
 
 function collectErrors(page) {
   const errors = [];
-  page.on("pageerror", error => errors.push(error.message));
+  page.on("pageerror", error => errors.push(error.stack || error.message));
   page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
   return errors;
 }
@@ -64,6 +64,12 @@ test("Louvre badges and vector icons resize together and stay centered at every 
   await expect(page.getByRole("region", { name: "Visitor accounts" })).toContainText("Jitka Tupa");
   await zoom(page, "in");
   await expect(page.getByRole("region", { name: "Visitor accounts" })).toBeVisible();
+  const popupBounds = await page.locator(".leaflet-popup").boundingBox();
+  const mapBounds = await page.locator(".leaflet-container").boundingBox();
+  expect(popupBounds.x).toBeGreaterThanOrEqual(mapBounds.x);
+  expect(popupBounds.x + popupBounds.width).toBeLessThanOrEqual(mapBounds.x + mapBounds.width);
+  expect(popupBounds.y).toBeGreaterThanOrEqual(mapBounds.y);
+  expect(popupBounds.y + popupBounds.height).toBeLessThanOrEqual(mapBounds.y + mapBounds.height);
   await page.keyboard.press("Escape");
   await page.locator('[data-indoor-level="1"]').click();
   const states = page.locator('[data-indoor-comment-id="osm-way-492611500"]');

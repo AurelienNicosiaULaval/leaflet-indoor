@@ -396,7 +396,9 @@
       element.style.marginLeft = String(offsetX - halfTarget) + "px";
       element.style.marginTop = String(offsetY - halfTarget) + "px";
       // Keep the pointer of an open popup attached to the visual badge.
-      marker.options.icon.options.popupAnchor = [offsetX, offsetY - size / 2];
+      // Leaflet rounds pan distances to whole pixels. A fractional popup anchor
+      // can repeatedly request a subpixel pan when keepInView is enabled.
+      marker.options.icon.options.popupAnchor = [Math.round(offsetX), Math.round(offsetY - size / 2)];
       if (marker.isPopupOpen()) updatePopupLayout(marker);
     }
     function syncLayout() {
